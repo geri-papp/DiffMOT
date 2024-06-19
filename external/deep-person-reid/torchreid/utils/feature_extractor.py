@@ -1,15 +1,12 @@
 from __future__ import absolute_import
+
 import numpy as np
 import torch
 import torchvision.transforms as T
 from PIL import Image
-
-from torchreid.utils import (
-    check_isfile,
-    load_pretrained_weights,
-    compute_model_complexity,
-)
 from torchreid.models import build_model
+from torchreid.utils import (check_isfile, compute_model_complexity,
+                             load_pretrained_weights)
 
 
 class FeatureExtractor(object):
@@ -79,9 +76,7 @@ class FeatureExtractor(object):
         model.eval()
 
         if verbose:
-            num_params, flops = compute_model_complexity(
-                model, (1, 3, image_size[0], image_size[1])
-            )
+            num_params, flops = compute_model_complexity(model, (1, 3, image_size[0], image_size[1]))
             print("Model: {}".format(model_name))
             print("- params: {:,}".format(num_params))
             print("- flops: {:,}".format(flops))
@@ -120,9 +115,7 @@ class FeatureExtractor(object):
                     image = self.to_pil(element)
 
                 else:
-                    raise TypeError(
-                        "Type of each element must belong to [str | numpy.ndarray]"
-                    )
+                    raise TypeError("Type of each element must belong to [str | numpy.ndarray]")
 
                 image = self.preprocess(image)
                 images.append(image)

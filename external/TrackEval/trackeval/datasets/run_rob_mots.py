@@ -1,10 +1,11 @@
 # python3 scripts\run_rob_mots.py --ROBMOTS_SPLIT val --TRACKERS_TO_EVAL tracker_name (e.g. STP) --USE_PARALLEL True --NUM_PARALLEL_CORES 4
 
-import sys
-import os
 import csv
-import numpy as np
+import os
+import sys
 from multiprocessing import freeze_support
+
+import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import trackeval  # noqa: E402
@@ -121,44 +122,27 @@ if __name__ == "__main__":
     for tracker in trackers:
         # final_results[benchmark][result_type][metric]
         final_results = {}
-        res = {
-            bench: output_res["RobMOTS." + bench][tracker]["COMBINED_SEQ"]
-            for bench in config["BENCHMARKS"]
-        }
+        res = {bench: output_res["RobMOTS." + bench][tracker]["COMBINED_SEQ"] for bench in config["BENCHMARKS"]}
         for bench in config["BENCHMARKS"]:
             final_results[bench] = {"cls_av": {}, "det_av": {}, "final": {}}
             for metric in metrics_to_calc:
-                final_results[bench]["cls_av"][metric] = np.mean(
-                    res[bench]["cls_comb_cls_av"]["HOTA"][metric]
-                )
-                final_results[bench]["det_av"][metric] = np.mean(
-                    res[bench]["all"]["HOTA"][metric]
-                )
+                final_results[bench]["cls_av"][metric] = np.mean(res[bench]["cls_comb_cls_av"]["HOTA"][metric])
+                final_results[bench]["det_av"][metric] = np.mean(res[bench]["all"]["HOTA"][metric])
                 final_results[bench]["final"][metric] = np.sqrt(
-                    final_results[bench]["cls_av"][metric]
-                    * final_results[bench]["det_av"][metric]
+                    final_results[bench]["cls_av"][metric] * final_results[bench]["det_av"][metric]
                 )
 
         # Take the arithmetic mean over all the benchmarks
         final_results["overall"] = {"cls_av": {}, "det_av": {}, "final": {}}
         for metric in metrics_to_calc:
             final_results["overall"]["cls_av"][metric] = np.mean(
-                [
-                    final_results[bench]["cls_av"][metric]
-                    for bench in config["BENCHMARKS"]
-                ]
+                [final_results[bench]["cls_av"][metric] for bench in config["BENCHMARKS"]]
             )
             final_results["overall"]["det_av"][metric] = np.mean(
-                [
-                    final_results[bench]["det_av"][metric]
-                    for bench in config["BENCHMARKS"]
-                ]
+                [final_results[bench]["det_av"][metric] for bench in config["BENCHMARKS"]]
             )
             final_results["overall"]["final"][metric] = np.mean(
-                [
-                    final_results[bench]["final"][metric]
-                    for bench in config["BENCHMARKS"]
-                ]
+                [final_results[bench]["final"][metric] for bench in config["BENCHMARKS"]]
             )
 
         # Save out result
@@ -167,11 +151,7 @@ if __name__ == "__main__":
         ]
 
         def rowify(d):
-            return [
-                d[x][metric]
-                for x in ["final", "cls_av", "det_av"]
-                for metric in metrics_to_calc
-            ]
+            return [d[x][metric] for x in ["final", "cls_av", "det_av"] for metric in metrics_to_calc]
 
         out_file = os.path.join(
             script_config["TRACKERS_FOLDER"],

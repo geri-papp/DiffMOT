@@ -9,18 +9,15 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from models import *
-
+from tracker import matching
 from tracking_utils.kalman_filter import KalmanFilter
 from tracking_utils.log import logger
 from tracking_utils.utils import *
 
-from tracker import matching
-
 from .basetrack import BaseTrack, TrackState
-
 from .cmc import CMCComputer
-from .gmc import GMC
 from .embedding import EmbeddingComputer
+from .gmc import GMC
 
 
 class STrack(BaseTrack):
@@ -33,7 +30,6 @@ class STrack(BaseTrack):
         self.xywh_amemory = deque([], maxlen=buffer_size)
 
         self.conds = deque([], maxlen=5)
-
 
         self._tlwh = np.asarray(tlwh, dtype=np.float)
         self.kalman_filter = None
@@ -83,14 +79,12 @@ class STrack(BaseTrack):
             multi_track_pred = model.generate(conds, sample=1, bestof=True, img_w=img_w, img_h=img_h)
             track_pred = multi_track_pred.mean(0)
 
-
             track_pred = track_pred + dets
 
             track_pred[:, 0::2] = track_pred[:, 0::2] * img_w
             track_pred[:, 1::2] = track_pred[:, 1::2] * img_h
             track_pred[:, 0] = track_pred[:, 0] - track_pred[:, 2] / 2
             track_pred[:, 1] = track_pred[:, 1] - track_pred[:, 3] / 2
-
 
             for i, st in enumerate(stracks):
                 st._tlwh = track_pred[i]
@@ -100,7 +94,6 @@ class STrack(BaseTrack):
                 tmp_delta_bbox = st.xywh.copy() - st.xywh_amemory[-2].copy()
                 tmp_conds = np.concatenate((st.xywh.copy(), tmp_delta_bbox))
                 st.conds.append(tmp_conds)
-
 
     def activate(self, frame_id):
         """Start a new tracklet"""
@@ -116,7 +109,6 @@ class STrack(BaseTrack):
         self.xywh_omemory.append(self.xywh.copy())
         self.xywh_pmemory.append(self.xywh.copy())
         self.xywh_amemory.append(self.xywh.copy())
-
 
         delta_bbox = self.xywh.copy() - self.xywh.copy()
         tmp_conds = np.concatenate((self.xywh.copy(), delta_bbox))
@@ -174,7 +166,7 @@ class STrack(BaseTrack):
     @property
     def tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
-                width, height)`.
+        width, height)`.
         """
         if self.mean is None:
             return self._tlwh.copy()
@@ -228,7 +220,7 @@ class STrack(BaseTrack):
         return ret
 
     def __repr__(self):
-        return 'OT_{}_({}-{})'.format(self.track_id, self.start_frame, self.end_frame)
+        return "OT_{}_({}-{})".format(self.track_id, self.start_frame, self.end_frame)
 
 
 class diffmottracker(object):
@@ -248,9 +240,8 @@ class diffmottracker(object):
         self.std = np.array([0.289, 0.274, 0.278], dtype=np.float32).reshape(1, 1, 3)
 
         # self.kalman_filter = KalmanFilter()
-        self.embedder = EmbeddingComputer(self.config, 'dancetrack', False, True)
+        self.embedder = EmbeddingComputer(self.config, "dancetrack", False, True)
         self.alpha_fixed_emb = 0.95
-
 
     def dump_cache(self):
         # self.cmc.dump_cache()
@@ -273,7 +264,6 @@ class diffmottracker(object):
         dets_second = dets[inds_second]
         dets = dets[remain_inds]
 
-
         dets_embs = np.ones((dets.shape[0], 1))
         if dets.shape[0] != 0:
             dets_embs = self.embedder.compute_embedding(img, dets[:, :4], tag)
@@ -282,15 +272,15 @@ class diffmottracker(object):
         # From [self.alpha_fixed_emb, 1], goes to 1 as detector is less confident
         dets_alpha = af + (1 - af) * (1 - trust)
 
-
         if len(dets) > 0:
-            '''Detections'''
-            detections = [STrack(STrack.tlbr_to_tlwh(tlbrs[:4]), tlbrs[4], f, 30) for
-                          (tlbrs, f) in zip(dets[:, :5], dets_embs)]
+            """Detections"""
+            detections = [
+                STrack(STrack.tlbr_to_tlwh(tlbrs[:4]), tlbrs[4], f, 30) for (tlbrs, f) in zip(dets[:, :5], dets_embs)
+            ]
         else:
             detections = []
 
-        ''' Add newly detected tracklets to tracked_stracks'''
+        """ Add newly detected tracklets to tracked_stracks"""
         unconfirmed = []
         tracked_stracks = []  # type: list[STrack]
         for track in self.tracked_stracks:
@@ -299,14 +289,13 @@ class diffmottracker(object):
             else:
                 tracked_stracks.append(track)
 
-        ''' Step 2: First association, with embedding'''
+        """ Step 2: First association, with embedding"""
         strack_pool = joint_stracks(tracked_stracks, self.lost_stracks)
         STrack.multi_predict_diff(strack_pool, self.model, img_w, img_h)
 
         trk_embs = [st.emb for st in strack_pool]
         trk_embs = np.array(trk_embs)
         emb_cost = None if (trk_embs.shape[0] == 0 or dets_embs.shape[0] == 0) else trk_embs @ dets_embs.T
-
 
         dists = matching.iou_distance(strack_pool, detections)
         iou_matrix = 1 - dists
@@ -328,7 +317,6 @@ class diffmottracker(object):
                 matched_indices = matching.linear_assignment2(final_cost)
         else:
             matched_indices = np.empty(shape=(0, 2))
-
 
         unmatched_detections = []
         for d, det in enumerate(detections):
@@ -355,7 +343,6 @@ class diffmottracker(object):
         u_track = np.array(unmatched_trackers)
         u_detection = np.array(unmatched_detections)
 
-
         for itracked, idet in matches:
             track = strack_pool[itracked]
             det = detections[idet]
@@ -369,11 +356,11 @@ class diffmottracker(object):
                 track.update_features(det.emb, alp)
                 refind_stracks.append(track)
 
-
         if len(dets_second) > 0:
-            '''Detections'''
-            detections_second = [STrack(STrack.tlbr_to_tlwh(tlbrs[:4]), tlbrs[4], buffer_size=30) for
-                                 (tlbrs) in dets_second[:, :5]]
+            """Detections"""
+            detections_second = [
+                STrack(STrack.tlbr_to_tlwh(tlbrs[:4]), tlbrs[4], buffer_size=30) for (tlbrs) in dets_second[:, :5]
+            ]
         else:
             detections_second = []
 
@@ -390,7 +377,6 @@ class diffmottracker(object):
                 track.re_activate(det, self.frame_id, new_id=False)
                 refind_stracks.append(track)
 
-
         for it in u_track:
             # track = strack_pool[it]
             track = r_tracked_stracks[it]
@@ -398,7 +384,7 @@ class diffmottracker(object):
                 track.mark_lost()
                 lost_stracks.append(track)
 
-        '''Deal with unconfirmed tracks, usually tracks with only one beginning frame'''
+        """Deal with unconfirmed tracks, usually tracks with only one beginning frame"""
         detections = [detections[i] for i in u_detection]
         dists = matching.iou_distance(unconfirmed, detections)
         matches, u_unconfirmed, u_detection = matching.linear_assignment(dists, thresh=0.7)
@@ -439,7 +425,6 @@ class diffmottracker(object):
         self.tracked_stracks, self.lost_stracks = remove_duplicate_stracks(self.tracked_stracks, self.lost_stracks)
         # get scores of lost tracks
         output_stracks = [track for track in self.tracked_stracks if track.is_activated]
-
 
         return output_stracks
 

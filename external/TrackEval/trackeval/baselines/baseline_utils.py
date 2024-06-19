@@ -1,7 +1,8 @@
-import os
 import csv
-import numpy as np
+import os
 from copy import deepcopy
+
+import numpy as np
 from PIL import Image
 from pycocotools import mask as mask_utils
 from scipy.optimize import linear_sum_assignment
@@ -63,18 +64,10 @@ def load_seq(file_to_load):
         for t in range(num_timesteps):
             if t in read_data[c].keys():
                 data[c][t]["ids"] = np.atleast_1d(read_data[c][t]["ids"]).astype(int)
-                data[c][t]["scores"] = np.atleast_1d(read_data[c][t]["scores"]).astype(
-                    float
-                )
-                data[c][t]["im_hs"] = np.atleast_1d(read_data[c][t]["im_hs"]).astype(
-                    int
-                )
-                data[c][t]["im_ws"] = np.atleast_1d(read_data[c][t]["im_ws"]).astype(
-                    int
-                )
-                data[c][t]["mask_rles"] = np.atleast_1d(
-                    read_data[c][t]["mask_rles"]
-                ).astype(str)
+                data[c][t]["scores"] = np.atleast_1d(read_data[c][t]["scores"]).astype(float)
+                data[c][t]["im_hs"] = np.atleast_1d(read_data[c][t]["im_hs"]).astype(int)
+                data[c][t]["im_ws"] = np.atleast_1d(read_data[c][t]["im_ws"]).astype(int)
+                data[c][t]["mask_rles"] = np.atleast_1d(read_data[c][t]["mask_rles"]).astype(str)
             else:
                 data[c][t]["ids"] = np.empty(0).astype(int)
                 data[c][t]["scores"] = np.empty(0).astype(float)
@@ -95,10 +88,7 @@ def threshold(tdata, thresh):
 
 def create_coco_mask(mask_rles, im_hs, im_ws):
     """Converts mask as rle text (+ height and width) to encoded version used by pycocotools."""
-    coco_masks = [
-        {"size": [h, w], "counts": m.encode(encoding="UTF-8")}
-        for h, w, m in zip(im_hs, im_ws, mask_rles)
-    ]
+    coco_masks = [{"size": [h, w], "counts": m.encode(encoding="UTF-8")} for h, w, m in zip(im_hs, im_ws, mask_rles)]
     return coco_masks
 
 
@@ -137,9 +127,7 @@ def mask_NMS(t_data, nms_threshold=0.5, already_sorted=False):
         t_data = sort_by_score(t_data)
 
     #  Calculate the mask IoU between all detections in the timestep.
-    mask_ious_all = mask_iou(
-        t_data["mask_rles"], t_data["mask_rles"], t_data["im_hs"], t_data["im_ws"]
-    )
+    mask_ious_all = mask_iou(t_data["mask_rles"], t_data["mask_rles"], t_data["im_hs"], t_data["im_ws"])
 
     # Determine which masks NMS should remove
     # (those overlapping greater than nms_threshold with another mask that has a higher score)
@@ -186,9 +174,7 @@ def non_overlap(t_data, already_sorted=False):
     # Encode the resulting np.array back into a set of coco_masks which are now non-overlapping.
     num_dets = len(coco_masks)
     for i, j in enumerate(range(1, num_dets + 1)[::-1]):
-        coco_masks[i] = mask_utils.encode(
-            np.asfortranarray(masks_array == j, dtype=np.uint8)
-        )
+        coco_masks[i] = mask_utils.encode(np.asfortranarray(masks_array == j, dtype=np.uint8))
 
     # Convert from coco_mask back into our mask_rle format.
     t_data["mask_rles"] = [m["counts"].decode("utf-8") for m in coco_masks]
@@ -230,23 +216,17 @@ def box_iou(bboxes1, bboxes2, box_format="xywh", do_ioa=False, do_giou=False):
     # layout: (x0, y0, x1, y1)
     min_ = np.minimum(bboxes1[:, np.newaxis, :], bboxes2[np.newaxis, :, :])
     max_ = np.maximum(bboxes1[:, np.newaxis, :], bboxes2[np.newaxis, :, :])
-    intersection = np.maximum(min_[..., 2] - max_[..., 0], 0) * np.maximum(
-        min_[..., 3] - max_[..., 1], 0
-    )
+    intersection = np.maximum(min_[..., 2] - max_[..., 0], 0) * np.maximum(min_[..., 3] - max_[..., 1], 0)
     area1 = (bboxes1[..., 2] - bboxes1[..., 0]) * (bboxes1[..., 3] - bboxes1[..., 1])
 
     if do_ioa:
         ioas = np.zeros_like(intersection)
         valid_mask = area1 > 0 + np.finfo("float").eps
-        ioas[valid_mask, :] = (
-            intersection[valid_mask, :] / area1[valid_mask][:, np.newaxis]
-        )
+        ioas[valid_mask, :] = intersection[valid_mask, :] / area1[valid_mask][:, np.newaxis]
 
         return ioas
     else:
-        area2 = (bboxes2[..., 2] - bboxes2[..., 0]) * (
-            bboxes2[..., 3] - bboxes2[..., 1]
-        )
+        area2 = (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] - bboxes2[..., 1])
         union = area1[:, np.newaxis] + area2[np.newaxis, :] - intersection
         intersection[area1 <= 0 + np.finfo("float").eps, :] = 0
         intersection[:, area2 <= 0 + np.finfo("float").eps] = 0
@@ -255,9 +235,7 @@ def box_iou(bboxes1, bboxes2, box_format="xywh", do_ioa=False, do_giou=False):
         ious = intersection / union
 
     if do_giou:
-        enclosing_area = np.maximum(max_[..., 2] - min_[..., 0], 0) * np.maximum(
-            max_[..., 3] - min_[..., 1], 0
-        )
+        enclosing_area = np.maximum(max_[..., 2] - min_[..., 0], 0) * np.maximum(max_[..., 3] - min_[..., 1], 0)
         eps = 1e-7
         # giou
         ious = ious - ((enclosing_area - union) / (enclosing_area + eps))
@@ -295,9 +273,7 @@ def combine_classes(data):
                 else:
                     output_data[timestep][k] = list(t_data[k])
             if "cls" in output_data[timestep].keys():
-                output_data[timestep]["cls"] += [cls] * len(
-                    output_data[timestep]["ids"]
-                )
+                output_data[timestep]["cls"] += [cls] * len(output_data[timestep]["ids"])
             else:
                 output_data[timestep]["cls"] = [cls] * len(output_data[timestep]["ids"])
 
@@ -312,9 +288,7 @@ def save_as_png(t_data, out_file, im_h, im_w):
     """Save a set of segmentation masks into a PNG format, the same as used for the DAVIS dataset."""
 
     if len(t_data["mask_rles"]) > 0:
-        coco_masks = create_coco_mask(
-            t_data["mask_rles"], t_data["im_hs"], t_data["im_ws"]
-        )
+        coco_masks = create_coco_mask(t_data["mask_rles"], t_data["im_hs"], t_data["im_ws"])
 
         list_of_np_masks = [mask_utils.decode(mask) for mask in coco_masks]
 

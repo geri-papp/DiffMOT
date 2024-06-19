@@ -1,11 +1,10 @@
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
+
 import argparse
 
 
 def init_parser():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # ************************************************************
     # Datasets
@@ -17,9 +16,7 @@ def init_parser():
         required=True,
         help="root path to data directory",
     )
-    parser.add_argument(
-        "-d", "--dataset", type=str, required=True, help="which dataset to choose"
-    )
+    parser.add_argument("-d", "--dataset", type=str, required=True, help="which dataset to choose")
     parser.add_argument(
         "-j",
         "--workers",
@@ -39,12 +36,8 @@ def init_parser():
         default="adam",
         help="optimization algorithm (see optimizers.py)",
     )
-    parser.add_argument(
-        "--lr", type=float, default=0.0003, help="initial learning rate"
-    )
-    parser.add_argument(
-        "--weight-decay", type=float, default=5e-04, help="weight decay"
-    )
+    parser.add_argument("--lr", type=float, default=0.0003, help="initial learning rate")
+    parser.add_argument("--weight-decay", type=float, default=5e-04, help="weight decay")
     # sgd
     parser.add_argument(
         "--momentum",
@@ -52,18 +45,14 @@ def init_parser():
         default=0.9,
         help="momentum factor for sgd and rmsprop",
     )
-    parser.add_argument(
-        "--sgd-dampening", type=float, default=0, help="sgd's dampening for momentum"
-    )
+    parser.add_argument("--sgd-dampening", type=float, default=0, help="sgd's dampening for momentum")
     parser.add_argument(
         "--sgd-nesterov",
         action="store_true",
         help="whether to enable sgd's Nesterov momentum",
     )
     # rmsprop
-    parser.add_argument(
-        "--rmsprop-alpha", type=float, default=0.99, help="rmsprop's smoothing constant"
-    )
+    parser.add_argument("--rmsprop-alpha", type=float, default=0.99, help="rmsprop's smoothing constant")
     # adam/amsgrad
     parser.add_argument(
         "--adam-beta1",
@@ -81,9 +70,7 @@ def init_parser():
     # ************************************************************
     # Training hyperparameters
     # ************************************************************
-    parser.add_argument(
-        "--max-epoch", type=int, default=60, help="maximum epochs to run"
-    )
+    parser.add_argument("--max-epoch", type=int, default=60, help="maximum epochs to run")
     parser.add_argument(
         "--start-epoch",
         type=int,
@@ -106,9 +93,7 @@ def init_parser():
         help="open specified layers for training while keeping others frozen",
     )
 
-    parser.add_argument(
-        "--staged-lr", action="store_true", help="set different lr to different layers"
-    )
+    parser.add_argument("--staged-lr", action="store_true", help="set different lr to different layers")
     parser.add_argument(
         "--new-layers",
         type=str,
@@ -145,27 +130,19 @@ def init_parser():
     # Architecture
     # ************************************************************
     parser.add_argument("-a", "--arch", type=str, default="", help="model architecture")
-    parser.add_argument(
-        "--no-pretrained", action="store_true", help="do not load pretrained weights"
-    )
+    parser.add_argument("--no-pretrained", action="store_true", help="do not load pretrained weights")
 
     # ************************************************************
     # Loss
     # ************************************************************
-    parser.add_argument(
-        "--weighted-bce", action="store_true", help="use weighted BCELoss"
-    )
+    parser.add_argument("--weighted-bce", action="store_true", help="use weighted BCELoss")
 
     # ************************************************************
     # Test settings
     # ************************************************************
-    parser.add_argument(
-        "--load-weights", type=str, default="", help="load pretrained weights"
-    )
+    parser.add_argument("--load-weights", type=str, default="", help="load pretrained weights")
     parser.add_argument("--evaluate", action="store_true", help="evaluate only")
-    parser.add_argument(
-        "--save-prediction", action="store_true", help="save prediction"
-    )
+    parser.add_argument("--save-prediction", action="store_true", help="save prediction")
 
     # ************************************************************
     # Miscs
@@ -179,9 +156,7 @@ def init_parser():
         metavar="PATH",
         help="resume from a checkpoint",
     )
-    parser.add_argument(
-        "--save-dir", type=str, default="log", help="path to save log and model weights"
-    )
+    parser.add_argument("--save-dir", type=str, default="log", help="path to save log and model weights")
     parser.add_argument("--use-cpu", action="store_true", help="use cpu")
 
     return parser

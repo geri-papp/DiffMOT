@@ -1,4 +1,5 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import copy
 import glob
 import os.path as osp
@@ -46,9 +47,7 @@ class SenseReID(ImageDataset):
         pid2label = {pid: i for i, pid in enumerate(g_pids)}
 
         query = [(img_path, pid2label[pid], camid) for img_path, pid, camid in query]
-        gallery = [
-            (img_path, pid2label[pid], camid) for img_path, pid, camid in gallery
-        ]
+        gallery = [(img_path, pid2label[pid], camid) for img_path, pid, camid in gallery]
         train = copy.deepcopy(query) + copy.deepcopy(gallery)  # dummy variable
 
         super(SenseReID, self).__init__(train, query, gallery, **kwargs)

@@ -1,7 +1,9 @@
-from __future__ import division, print_function, absolute_import
-import os
+from __future__ import absolute_import, division, print_function
+
 import glob
+import os
 import os.path as osp
+
 import gdown
 
 from ..dataset import ImageDataset
@@ -59,12 +61,8 @@ class University1652(ImageDataset):
             gdown.download(self.dataset_url, self.dataset_dir + "data.zip", quiet=False)
             os.system("unzip %s" % (self.dataset_dir + "data.zip"))
         self.train_dir = osp.join(self.dataset_dir, "University-Release/train/")
-        self.query_dir = osp.join(
-            self.dataset_dir, "University-Release/test/query_drone"
-        )
-        self.gallery_dir = osp.join(
-            self.dataset_dir, "University-Release/test/gallery_satellite"
-        )
+        self.query_dir = osp.join(self.dataset_dir, "University-Release/test/query_drone")
+        self.gallery_dir = osp.join(self.dataset_dir, "University-Release/test/gallery_satellite")
 
         required_files = [
             self.dataset_dir,

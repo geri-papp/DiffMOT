@@ -1,4 +1,5 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import glob
 import os.path as osp
 
@@ -71,9 +72,7 @@ class CUHK02(ImageDataset):
                 pids1 = [osp.basename(impath).split("_")[0] for impath in impaths1]
                 pids2 = [osp.basename(impath).split("_")[0] for impath in impaths2]
                 pids = set(pids1 + pids2)
-                pid2label = {
-                    pid: label + num_train_pids for label, pid in enumerate(pids)
-                }
+                pid2label = {pid: label + num_train_pids for label, pid in enumerate(pids)}
 
                 # add images to train from cam1
                 for impath in impaths1:

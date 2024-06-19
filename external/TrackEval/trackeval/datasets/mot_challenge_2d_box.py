@@ -1,14 +1,14 @@
-import os
-import csv
 import configparser
+import csv
+import os
 import pdb
 
 import numpy as np
 from scipy.optimize import linear_sum_assignment
-from ._base_dataset import _BaseDataset
-from .. import utils
-from .. import _timing
+
+from .. import _timing, utils
 from ..utils import TrackEvalException
+from ._base_dataset import _BaseDataset
 
 
 class MotChallenge2DBox(_BaseDataset):
@@ -19,12 +19,8 @@ class MotChallenge2DBox(_BaseDataset):
         """Default class config values"""
         code_path = utils.get_code_path()
         default_config = {
-            "GT_FOLDER": os.path.join(
-                code_path, "data/gt/mot_challenge/"
-            ),  # Location of GT data
-            "TRACKERS_FOLDER": os.path.join(
-                code_path, "data/trackers/mot_challenge/"
-            ),  # Trackers location
+            "GT_FOLDER": os.path.join(code_path, "data/gt/mot_challenge/"),  # Location of GT data
+            "TRACKERS_FOLDER": os.path.join(code_path, "data/trackers/mot_challenge/"),  # Trackers location
             "OUTPUT_FOLDER": None,  # Where to save eval results (if None, same as TRACKERS_FOLDER)
             "TRACKERS_TO_EVAL": None,  # Filenames of trackers to eval (if None, all in folder)
             "CLASSES_TO_EVAL": ["pedestrian"],  # Valid: ['pedestrian']
@@ -50,9 +46,7 @@ class MotChallenge2DBox(_BaseDataset):
         """Initialise dataset, checking that all required files are present"""
         super().__init__()
         # Fill non-given config values with defaults
-        self.config = utils.init_config(
-            config, self.get_default_dataset_config(), self.get_name()
-        )
+        self.config = utils.init_config(config, self.get_default_dataset_config(), self.get_name())
 
         self.benchmark = self.config["BENCHMARK"]
         gt_set = self.config["BENCHMARK"] + "-" + self.config["SPLIT_TO_EVAL"]
@@ -78,13 +72,10 @@ class MotChallenge2DBox(_BaseDataset):
         # Get classes to eval
         self.valid_classes = ["pedestrian"]
         self.class_list = [
-            cls.lower() if cls.lower() in self.valid_classes else None
-            for cls in self.config["CLASSES_TO_EVAL"]
+            cls.lower() if cls.lower() in self.valid_classes else None for cls in self.config["CLASSES_TO_EVAL"]
         ]
         if not all(self.class_list):
-            raise TrackEvalException(
-                "Attempted to evaluate an invalid class. Only pedestrian class is valid."
-            )
+            raise TrackEvalException("Attempted to evaluate an invalid class. Only pedestrian class is valid.")
         self.class_name_to_class_id = {
             "pedestrian": 1,
             "person_on_vehicle": 2,
@@ -110,9 +101,7 @@ class MotChallenge2DBox(_BaseDataset):
         # Check gt files exist
         for seq in self.seq_list:
             if not self.data_is_zipped:
-                curr_file = self.config["GT_LOC_FORMAT"].format(
-                    gt_folder=self.gt_fol, seq=seq
-                )
+                curr_file = self.config["GT_LOC_FORMAT"].format(gt_folder=self.gt_fol, seq=seq)
                 if not os.path.isfile(curr_file):
                     print("GT file not found " + curr_file)
                     raise TrackEvalException("GT file not found for sequence: " + seq)
@@ -120,9 +109,7 @@ class MotChallenge2DBox(_BaseDataset):
             curr_file = os.path.join(self.gt_fol, "data.zip")
             if not os.path.isfile(curr_file):
                 print("GT file not found " + curr_file)
-                raise TrackEvalException(
-                    "GT file not found: " + os.path.basename(curr_file)
-                )
+                raise TrackEvalException("GT file not found: " + os.path.basename(curr_file))
 
         # Get trackers to eval
         if self.config["TRACKERS_TO_EVAL"] is None:
@@ -135,32 +122,19 @@ class MotChallenge2DBox(_BaseDataset):
         elif (self.config["TRACKERS_TO_EVAL"] is not None) and (
             len(self.config["TRACKER_DISPLAY_NAMES"]) == len(self.tracker_list)
         ):
-            self.tracker_to_disp = dict(
-                zip(self.tracker_list, self.config["TRACKER_DISPLAY_NAMES"])
-            )
+            self.tracker_to_disp = dict(zip(self.tracker_list, self.config["TRACKER_DISPLAY_NAMES"]))
         else:
-            raise TrackEvalException(
-                "List of tracker files and tracker display names do not match."
-            )
+            raise TrackEvalException("List of tracker files and tracker display names do not match.")
 
         for tracker in self.tracker_list:
             if self.data_is_zipped:
-                curr_file = os.path.join(
-                    self.tracker_fol, tracker, self.tracker_sub_fol + ".zip"
-                )
+                curr_file = os.path.join(self.tracker_fol, tracker, self.tracker_sub_fol + ".zip")
                 if not os.path.isfile(curr_file):
                     print("Tracker file not found: " + curr_file)
-                    raise TrackEvalException(
-                        "Tracker file not found: "
-                        + tracker
-                        + "/"
-                        + os.path.basename(curr_file)
-                    )
+                    raise TrackEvalException("Tracker file not found: " + tracker + "/" + os.path.basename(curr_file))
             else:
                 for seq in self.seq_list:
-                    curr_file = os.path.join(
-                        self.tracker_fol, tracker, self.tracker_sub_fol, seq + ".txt"
-                    )
+                    curr_file = os.path.join(self.tracker_fol, tracker, self.tracker_sub_fol, seq + ".txt")
                     if not os.path.isfile(curr_file):
                         print("Tracker file not found: " + curr_file)
                         raise TrackEvalException(
@@ -187,12 +161,7 @@ class MotChallenge2DBox(_BaseDataset):
                 if seq_length is None:
                     ini_file = os.path.join(self.gt_fol, seq, "seqinfo.ini")
                     if not os.path.isfile(ini_file):
-                        raise TrackEvalException(
-                            "ini file does not exist: "
-                            + seq
-                            + "/"
-                            + os.path.basename(ini_file)
-                        )
+                        raise TrackEvalException("ini file does not exist: " + seq + "/" + os.path.basename(ini_file))
                     ini_data = configparser.ConfigParser()
                     ini_data.read(ini_file)
                     seq_lengths[seq] = int(ini_data["Sequence"]["seqLength"])
@@ -202,18 +171,12 @@ class MotChallenge2DBox(_BaseDataset):
                 seqmap_file = self.config["SEQMAP_FILE"]
             else:
                 if self.config["SEQMAP_FOLDER"] is None:
-                    seqmap_file = os.path.join(
-                        self.config["GT_FOLDER"], "seqmaps", self.gt_set + ".txt"
-                    )
+                    seqmap_file = os.path.join(self.config["GT_FOLDER"], "seqmaps", self.gt_set + ".txt")
                 else:
-                    seqmap_file = os.path.join(
-                        self.config["SEQMAP_FOLDER"], self.gt_set + ".txt"
-                    )
+                    seqmap_file = os.path.join(self.config["SEQMAP_FOLDER"], self.gt_set + ".txt")
             if not os.path.isfile(seqmap_file):
                 print("no seqmap found: " + seqmap_file)
-                raise TrackEvalException(
-                    "no seqmap found: " + os.path.basename(seqmap_file)
-                )
+                raise TrackEvalException("no seqmap found: " + os.path.basename(seqmap_file))
             with open(seqmap_file) as fp:
                 reader = csv.reader(fp)
                 for i, row in enumerate(reader):
@@ -223,12 +186,7 @@ class MotChallenge2DBox(_BaseDataset):
                     seq_list.append(seq)
                     ini_file = os.path.join(self.gt_fol, seq, "seqinfo.ini")
                     if not os.path.isfile(ini_file):
-                        raise TrackEvalException(
-                            "ini file does not exist: "
-                            + seq
-                            + "/"
-                            + os.path.basename(ini_file)
-                        )
+                        raise TrackEvalException("ini file does not exist: " + seq + "/" + os.path.basename(ini_file))
                     ini_data = configparser.ConfigParser()
                     ini_data.read(ini_file)
                     seq_lengths[seq] = int(ini_data["Sequence"]["seqLength"])
@@ -251,25 +209,17 @@ class MotChallenge2DBox(_BaseDataset):
             if is_gt:
                 zip_file = os.path.join(self.gt_fol, "data.zip")
             else:
-                zip_file = os.path.join(
-                    self.tracker_fol, tracker, self.tracker_sub_fol + ".zip"
-                )
+                zip_file = os.path.join(self.tracker_fol, tracker, self.tracker_sub_fol + ".zip")
             file = seq + ".txt"
         else:
             zip_file = None
             if is_gt:
-                file = self.config["GT_LOC_FORMAT"].format(
-                    gt_folder=self.gt_fol, seq=seq
-                )
+                file = self.config["GT_LOC_FORMAT"].format(gt_folder=self.gt_fol, seq=seq)
             else:
-                file = os.path.join(
-                    self.tracker_fol, tracker, self.tracker_sub_fol, seq + ".txt"
-                )
+                file = os.path.join(self.tracker_fol, tracker, self.tracker_sub_fol, seq + ".txt")
 
         # Load raw data from text file
-        read_data, ignore_data = self._load_simple_text_file(
-            file, is_zipped=self.data_is_zipped, zip_file=zip_file
-        )
+        read_data, ignore_data = self._load_simple_text_file(file, is_zipped=self.data_is_zipped, zip_file=zip_file)
 
         # Convert data to required format
         num_timesteps = self.seq_lengths[seq]
@@ -302,8 +252,7 @@ class MotChallenge2DBox(_BaseDataset):
                 except ValueError:
                     if is_gt:
                         raise TrackEvalException(
-                            "Cannot convert gt data for sequence %s to float. Is data corrupted?"
-                            % seq
+                            "Cannot convert gt data for sequence %s to float. Is data corrupted?" % seq
                         )
                     else:
                         raise TrackEvalException(
@@ -337,9 +286,7 @@ class MotChallenge2DBox(_BaseDataset):
                             % (seq, t)
                         )
                 if is_gt:
-                    gt_extras_dict = {
-                        "zero_marked": np.atleast_1d(time_data[:, 6].astype(int))
-                    }
+                    gt_extras_dict = {"zero_marked": np.atleast_1d(time_data[:, 6].astype(int))}
                     raw_data["gt_extras"][t] = gt_extras_dict
                 else:
                     raw_data["tracker_confidences"][t] = np.atleast_1d(time_data[:, 6])
@@ -413,9 +360,7 @@ class MotChallenge2DBox(_BaseDataset):
         ]
         if self.benchmark == "MOT20":
             distractor_class_names.append("non_mot_vehicle")
-        distractor_classes = [
-            self.class_name_to_class_id[x] for x in distractor_class_names
-        ]
+        distractor_classes = [self.class_name_to_class_id[x] for x in distractor_class_names]
         cls_id = self.class_name_to_class_id[cls]
 
         data_keys = [
@@ -455,17 +400,10 @@ class MotChallenge2DBox(_BaseDataset):
             # Match tracker and gt dets (with hungarian algorithm) and remove tracker dets which match with gt dets
             # which are labeled as belonging to a distractor class.
             to_remove_tracker = np.array([], np.int32)
-            if (
-                self.do_preproc
-                and self.benchmark != "MOT15"
-                and gt_ids.shape[0] > 0
-                and tracker_ids.shape[0] > 0
-            ):
+            if self.do_preproc and self.benchmark != "MOT15" and gt_ids.shape[0] > 0 and tracker_ids.shape[0] > 0:
 
                 # Check all classes are valid:
-                invalid_classes = np.setdiff1d(
-                    np.unique(gt_classes), self.valid_class_numbers
-                )
+                invalid_classes = np.setdiff1d(np.unique(gt_classes), self.valid_class_numbers)
                 if len(invalid_classes) > 0:
                     print(" ".join([str(x) for x in invalid_classes]))
                     raise (
@@ -484,31 +422,23 @@ class MotChallenge2DBox(_BaseDataset):
                 matching_scores = similarity_scores.copy()
                 matching_scores[matching_scores < 0.5 - np.finfo("float").eps] = 0
                 match_rows, match_cols = linear_sum_assignment(-matching_scores)
-                actually_matched_mask = (
-                    matching_scores[match_rows, match_cols] > 0 + np.finfo("float").eps
-                )
+                actually_matched_mask = matching_scores[match_rows, match_cols] > 0 + np.finfo("float").eps
                 match_rows = match_rows[actually_matched_mask]
                 match_cols = match_cols[actually_matched_mask]
 
-                is_distractor_class = np.isin(
-                    gt_classes[match_rows], distractor_classes
-                )
+                is_distractor_class = np.isin(gt_classes[match_rows], distractor_classes)
                 to_remove_tracker = match_cols[is_distractor_class]
 
             # Apply preprocessing to remove all unwanted tracker dets.
             data["tracker_ids"][t] = np.delete(tracker_ids, to_remove_tracker, axis=0)
             data["tracker_dets"][t] = np.delete(tracker_dets, to_remove_tracker, axis=0)
-            data["tracker_confidences"][t] = np.delete(
-                tracker_confidences, to_remove_tracker, axis=0
-            )
+            data["tracker_confidences"][t] = np.delete(tracker_confidences, to_remove_tracker, axis=0)
             similarity_scores = np.delete(similarity_scores, to_remove_tracker, axis=1)
 
             # Remove gt detections marked as to remove (zero marked), and also remove gt detections not in pedestrian
             # class (not applicable for MOT15)
             if self.do_preproc and self.benchmark != "MOT15":
-                gt_to_keep_mask = (np.not_equal(gt_zero_marked, 0)) & (
-                    np.equal(gt_classes, cls_id)
-                )
+                gt_to_keep_mask = (np.not_equal(gt_zero_marked, 0)) & (np.equal(gt_classes, cls_id))
             else:
                 # There are no classes for MOT15
                 gt_to_keep_mask = np.not_equal(gt_zero_marked, 0)
@@ -535,9 +465,7 @@ class MotChallenge2DBox(_BaseDataset):
             tracker_id_map[unique_tracker_ids] = np.arange(len(unique_tracker_ids))
             for t in range(raw_data["num_timesteps"]):
                 if len(data["tracker_ids"][t]) > 0:
-                    data["tracker_ids"][t] = tracker_id_map[
-                        data["tracker_ids"][t]
-                    ].astype(np.int32)
+                    data["tracker_ids"][t] = tracker_id_map[data["tracker_ids"][t]].astype(np.int32)
 
         # Record overview statistics.
         data["num_tracker_dets"] = num_tracker_dets
@@ -553,7 +481,5 @@ class MotChallenge2DBox(_BaseDataset):
         return data
 
     def _calculate_similarities(self, gt_dets_t, tracker_dets_t):
-        similarity_scores = self._calculate_box_ious(
-            gt_dets_t, tracker_dets_t, box_format="xywh"
-        )
+        similarity_scores = self._calculate_box_ious(gt_dets_t, tracker_dets_t, box_format="xywh")
         return similarity_scores

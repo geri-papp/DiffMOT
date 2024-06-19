@@ -7,9 +7,7 @@ def get_default_config():
     # model
     cfg.model = CN()
     cfg.model.name = "resnet50"
-    cfg.model.pretrained = (
-        True  # automatically load pretrained model weights if available
-    )
+    cfg.model.pretrained = True  # automatically load pretrained model weights if available
     cfg.model.load_weights1 = ""  # path to model-1 weights
     cfg.model.load_weights2 = ""  # path to model-2 weights
     cfg.model.resume1 = ""  # path to checkpoint for resume training
@@ -35,22 +33,16 @@ def get_default_config():
 
     # specific datasets
     cfg.market1501 = CN()
-    cfg.market1501.use_500k_distractors = (
-        False  # add 500k distractors to the gallery set for market1501
-    )
+    cfg.market1501.use_500k_distractors = False  # add 500k distractors to the gallery set for market1501
     cfg.cuhk03 = CN()
-    cfg.cuhk03.labeled_images = (
-        False  # use labeled images, if False, use detected images
-    )
+    cfg.cuhk03.labeled_images = False  # use labeled images, if False, use detected images
     cfg.cuhk03.classic_split = False  # use classic split by Li et al. CVPR14
     cfg.cuhk03.use_metric_cuhk03 = False  # use cuhk03's metric for evaluation
 
     # sampler
     cfg.sampler = CN()
     cfg.sampler.train_sampler = "RandomSampler"
-    cfg.sampler.num_instances = (
-        4  # number of instances per identity for RandomIdentitySampler
-    )
+    cfg.sampler.num_instances = 4  # number of instances per identity for RandomIdentitySampler
 
     # video reid setting
     cfg.video = CN()
@@ -67,9 +59,7 @@ def get_default_config():
     cfg.train.start_epoch = 0
     cfg.train.batch_size = 32
     cfg.train.fixbase_epoch = 0  # number of epochs to fix base layers
-    cfg.train.open_layers = [
-        "classifier"
-    ]  # layers for training while keeping others frozen
+    cfg.train.open_layers = ["classifier"]  # layers for training while keeping others frozen
     cfg.train.staged_lr = False  # set different lr to different layers
     cfg.train.new_layers = ["classifier"]  # newly added layers with default lr
     cfg.train.base_lr_mult = 0.1  # learning rate multiplier for base layers
@@ -106,19 +96,13 @@ def get_default_config():
     cfg.test = CN()
     cfg.test.batch_size = 100
     cfg.test.dist_metric = "euclidean"  # distance metric, ['euclidean', 'cosine']
-    cfg.test.normalize_feature = (
-        False  # normalize feature vectors before computing distance
-    )
+    cfg.test.normalize_feature = False  # normalize feature vectors before computing distance
     cfg.test.ranks = [1, 5, 10, 20]  # cmc ranks
     cfg.test.evaluate = False  # test only
-    cfg.test.eval_freq = (
-        -1
-    )  # evaluation frequency (-1 means to only test after training)
+    cfg.test.eval_freq = -1  # evaluation frequency (-1 means to only test after training)
     cfg.test.start_eval = 0  # start to evaluate after a specific epoch
     cfg.test.rerank = False  # use person re-ranking
-    cfg.test.visrank = (
-        False  # visualize ranked results (only available when cfg.test.evaluate=True)
-    )
+    cfg.test.visrank = False  # visualize ranked results (only available when cfg.test.evaluate=True)
     cfg.test.visrank_topk = 10  # top-k ranks to visualize
 
     return cfg

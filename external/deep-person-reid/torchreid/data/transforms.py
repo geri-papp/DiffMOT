@@ -1,17 +1,13 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import math
 import random
 from collections import deque
+
 import torch
 from PIL import Image
-from torchvision.transforms import (
-    Resize,
-    Compose,
-    ToTensor,
-    Normalize,
-    ColorJitter,
-    RandomHorizontalFlip,
-)
+from torchvision.transforms import (ColorJitter, Compose, Normalize,
+                                    RandomHorizontalFlip, Resize, ToTensor)
 
 
 class Random2DTranslation(object):
@@ -40,9 +36,7 @@ class Random2DTranslation(object):
         if random.uniform(0, 1) > self.p:
             return img.resize((self.width, self.height), self.interpolation)
 
-        new_width, new_height = int(round(self.width * 1.125)), int(
-            round(self.height * 1.125)
-        )
+        new_width, new_height = int(round(self.width * 1.125)), int(round(self.height * 1.125))
         resized_img = img.resize((new_width, new_height), self.interpolation)
         x_maxrange = new_width - self.width
         y_maxrange = new_height - self.height
@@ -69,9 +63,7 @@ class RandomErasing(object):
         mean (list, optional): erasing value.
     """
 
-    def __init__(
-        self, probability=0.5, sl=0.02, sh=0.4, r1=0.3, mean=[0.4914, 0.4822, 0.4465]
-    ):
+    def __init__(self, probability=0.5, sl=0.02, sh=0.4, r1=0.3, mean=[0.4914, 0.4822, 0.4465]):
         self.probability = probability
         self.mean = mean
         self.sl = sl
@@ -182,12 +174,8 @@ class RandomPatch(object):
     def generate_wh(self, W, H):
         area = W * H
         for attempt in range(100):
-            target_area = (
-                random.uniform(self.patch_min_area, self.patch_max_area) * area
-            )
-            aspect_ratio = random.uniform(
-                self.patch_min_ratio, 1.0 / self.patch_min_ratio
-            )
+            target_area = random.uniform(self.patch_min_area, self.patch_max_area) * area
+            aspect_ratio = random.uniform(self.patch_min_ratio, 1.0 / self.patch_min_ratio)
             h = int(round(math.sqrt(target_area * aspect_ratio)))
             w = int(round(math.sqrt(target_area / aspect_ratio)))
             if w < W and h < H:
@@ -230,12 +218,7 @@ class RandomPatch(object):
 
 
 def build_transforms(
-    height,
-    width,
-    transforms="random_flip",
-    norm_mean=[0.485, 0.456, 0.406],
-    norm_std=[0.229, 0.224, 0.225],
-    **kwargs
+    height, width, transforms="random_flip", norm_mean=[0.485, 0.456, 0.406], norm_std=[0.229, 0.224, 0.225], **kwargs
 ):
     """Builds train and test transform functions.
 
@@ -255,11 +238,7 @@ def build_transforms(
         transforms = [transforms]
 
     if not isinstance(transforms, list):
-        raise ValueError(
-            "transforms must be a list of strings, but found to be {}".format(
-                type(transforms)
-            )
-        )
+        raise ValueError("transforms must be a list of strings, but found to be {}".format(type(transforms)))
 
     if len(transforms) > 0:
         transforms = [t.lower() for t in transforms]
@@ -282,9 +261,7 @@ def build_transforms(
     if "random_crop" in transforms:
         print(
             "+ random crop (enlarge to {}x{} and "
-            "crop {}x{})".format(
-                int(round(height * 1.125)), int(round(width * 1.125)), height, width
-            )
+            "crop {}x{})".format(int(round(height * 1.125)), int(round(width * 1.125)), height, width)
         )
         transform_tr += [Random2DTranslation(height, width)]
 
@@ -294,9 +271,7 @@ def build_transforms(
 
     if "color_jitter" in transforms:
         print("+ color jitter")
-        transform_tr += [
-            ColorJitter(brightness=0.2, contrast=0.15, saturation=0, hue=0)
-        ]
+        transform_tr += [ColorJitter(brightness=0.2, contrast=0.15, saturation=0, hue=0)]
 
     print("+ to torch tensor of range [0, 1]")
     transform_tr += [ToTensor()]

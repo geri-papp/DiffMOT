@@ -1,10 +1,11 @@
 # python3 scripts/run_rob_mots.py --ROBMOTS_SPLIT train --TRACKERS_TO_EVAL STP --USE_PARALLEL True --NUM_PARALLEL_CORES 8
 
-import sys
-import os
 import csv
-import numpy as np
+import os
+import sys
 from multiprocessing import freeze_support
+
+import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import trackeval  # noqa: E402
@@ -44,9 +45,7 @@ if __name__ == "__main__":
                 "waymo",
             ]
             config["SPLIT_TO_EVAL"] = "val"
-        elif (
-            config["ROBMOTS_SPLIT"] == "test" or config["SPLIT_TO_EVAL"] == "test_live"
-        ):
+        elif config["ROBMOTS_SPLIT"] == "test" or config["SPLIT_TO_EVAL"] == "test_live":
             config["BENCHMARKS"] = [
                 "kitti_mots",
                 "bdd_mots",
@@ -123,7 +122,9 @@ if __name__ == "__main__":
     if config["TRACKERS_TO_EVAL"]:
         msg = "Thanks you for participating in the RobMOTS benchmark.\n\n"
         msg += "The status of your evaluation is: \n" + output + "\n\n"
-        msg += "If your tracking results evaluated successfully on the evaluation server you can see your results here: \n"
+        msg += (
+            "If your tracking results evaluated successfully on the evaluation server you can see your results here: \n"
+        )
         msg += "https://eval.vision.rwth-aachen.de/vision/"
         status_file = os.path.join(
             config["TRACKERS_FOLDER"],
@@ -150,59 +151,36 @@ if __name__ == "__main__":
         for tracker in trackers:
             # final_results[benchmark][result_type][metric]
             final_results = {}
-            res = {
-                bench: output_res["RobMOTS." + bench][tracker]["COMBINED_SEQ"]
-                for bench in config["BENCHMARKS"]
-            }
+            res = {bench: output_res["RobMOTS." + bench][tracker]["COMBINED_SEQ"] for bench in config["BENCHMARKS"]}
             for bench in config["BENCHMARKS"]:
                 final_results[bench] = {"cls_av": {}, "det_av": {}, "final": {}}
                 for metric in metrics_to_calc:
-                    final_results[bench]["cls_av"][metric] = np.mean(
-                        res[bench]["cls_comb_cls_av"]["HOTA"][metric]
-                    )
-                    final_results[bench]["det_av"][metric] = np.mean(
-                        res[bench]["all"]["HOTA"][metric]
-                    )
+                    final_results[bench]["cls_av"][metric] = np.mean(res[bench]["cls_comb_cls_av"]["HOTA"][metric])
+                    final_results[bench]["det_av"][metric] = np.mean(res[bench]["all"]["HOTA"][metric])
                     final_results[bench]["final"][metric] = np.sqrt(
-                        final_results[bench]["cls_av"][metric]
-                        * final_results[bench]["det_av"][metric]
+                        final_results[bench]["cls_av"][metric] * final_results[bench]["det_av"][metric]
                     )
 
             # Take the arithmetic mean over all the benchmarks
             final_results["overall"] = {"cls_av": {}, "det_av": {}, "final": {}}
             for metric in metrics_to_calc:
                 final_results["overall"]["cls_av"][metric] = np.mean(
-                    [
-                        final_results[bench]["cls_av"][metric]
-                        for bench in config["BENCHMARKS"]
-                    ]
+                    [final_results[bench]["cls_av"][metric] for bench in config["BENCHMARKS"]]
                 )
                 final_results["overall"]["det_av"][metric] = np.mean(
-                    [
-                        final_results[bench]["det_av"][metric]
-                        for bench in config["BENCHMARKS"]
-                    ]
+                    [final_results[bench]["det_av"][metric] for bench in config["BENCHMARKS"]]
                 )
                 final_results["overall"]["final"][metric] = np.mean(
-                    [
-                        final_results[bench]["final"][metric]
-                        for bench in config["BENCHMARKS"]
-                    ]
+                    [final_results[bench]["final"][metric] for bench in config["BENCHMARKS"]]
                 )
 
             # Save out result
             headers = [config["SPLIT_TO_EVAL"]] + [
-                x + "___" + metric
-                for x in ["f", "c", "d"]
-                for metric in metrics_to_calc
+                x + "___" + metric for x in ["f", "c", "d"] for metric in metrics_to_calc
             ]
 
             def rowify(d):
-                return [
-                    d[x][metric]
-                    for x in ["final", "cls_av", "det_av"]
-                    for metric in metrics_to_calc
-                ]
+                return [d[x][metric] for x in ["final", "cls_av", "det_av"] for metric in metrics_to_calc]
 
             out_file = os.path.join(
                 config["TRACKERS_FOLDER"],

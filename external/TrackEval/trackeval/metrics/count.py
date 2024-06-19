@@ -1,5 +1,5 @@
-from ._base_metric import _BaseMetric
 from .. import _timing
+from ._base_metric import _BaseMetric
 
 
 class Count(_BaseMetric):

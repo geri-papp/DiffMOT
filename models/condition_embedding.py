@@ -1,8 +1,10 @@
 import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange, repeat
+
 
 class PositionEmbeddingSine(nn.Module):
     """
@@ -48,14 +50,20 @@ def _get_activation_fn(activation):
         return F.gelu
     if activation == "glu":
         return F.glu
-    raise RuntimeError(F"activation should be relu/gelu, not {activation}.")
-
+    raise RuntimeError(f"activation should be relu/gelu, not {activation}.")
 
 
 class TransformerEncoderLayer(nn.Module):
 
-    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1,
-                 activation="relu", normalize_before=False):
+    def __init__(
+        self,
+        d_model,
+        nhead,
+        dim_feedforward=2048,
+        dropout=0.1,
+        activation="relu",
+        normalize_before=False,
+    ):
         super().__init__()
         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
         # Implementation of Feedforward model
@@ -74,13 +82,8 @@ class TransformerEncoderLayer(nn.Module):
     def with_pos_embed(self, tensor, pos):
         return tensor if pos is None else tensor + pos
 
-    def forward_post(self,
-                     src,
-                     src_mask = None,
-                     src_key_padding_mask = None,
-                     pos = None):
-        src2 = self.self_attn(src, src, value=src, attn_mask=src_mask,
-                              key_padding_mask=src_key_padding_mask)[0]
+    def forward_post(self, src, src_mask=None, src_key_padding_mask=None, pos=None):
+        src2 = self.self_attn(src, src, value=src, attn_mask=src_mask, key_padding_mask=src_key_padding_mask)[0]
         src = src + self.dropout1(src2)
         src = self.norm1(src)
         src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
@@ -88,45 +91,45 @@ class TransformerEncoderLayer(nn.Module):
         src = self.norm2(src)
         return src
 
-    def forward_pre(self, src,
-                    src_mask = None,
-                    src_key_padding_mask = None,
-                    pos = None):
+    def forward_pre(self, src, src_mask=None, src_key_padding_mask=None, pos=None):
         src2 = self.norm1(src)
         q = k = self.with_pos_embed(src2, pos)
-        src2 = self.self_attn(q, k, value=src2, attn_mask=src_mask,
-                              key_padding_mask=src_key_padding_mask)[0]
+        src2 = self.self_attn(q, k, value=src2, attn_mask=src_mask, key_padding_mask=src_key_padding_mask)[0]
         src = src + self.dropout1(src2)
         src2 = self.norm2(src)
         src2 = self.linear2(self.dropout(self.activation(self.linear1(src2))))
         src = src + self.dropout2(src2)
         return src
 
-    def forward(self, src,
-                src_mask = None,
-                src_key_padding_mask = None,
-                pos = None):
+    def forward(self, src, src_mask=None, src_key_padding_mask=None, pos=None):
         if self.normalize_before:
             return self.forward_pre(src, src_mask, src_key_padding_mask, pos)
         return self.forward_post(src, src_mask, src_key_padding_mask, pos)
 
 
-
 class History_motion_embedding(nn.Module):
-    def __init__(self, d_model=256, nhead=8, dim_feedforward=512, dropout=0.1,
-                 activation='relu', normalize_before=False, pos_type='sin'):
+    def __init__(
+        self,
+        d_model=256,
+        nhead=8,
+        dim_feedforward=512,
+        dropout=0.1,
+        activation="relu",
+        normalize_before=False,
+        pos_type="sin",
+    ):
         super(History_motion_embedding, self).__init__()
         self.cascade_num = 6
         self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
         self.trca = nn.ModuleList()
         for _ in range(self.cascade_num):
-            self.trca.append(TransformerEncoderLayer(d_model, nhead, dim_feedforward,
-                                                   dropout, activation, normalize_before))
+            self.trca.append(
+                TransformerEncoderLayer(d_model, nhead, dim_feedforward, dropout, activation, normalize_before)
+            )
 
         self.proj = nn.Linear(8, d_model)
-        if pos_type == 'sin':
+        if pos_type == "sin":
             self.pose_encoding = PositionEmbeddingSine(normalize=True)
-
 
     def forward(self, x):
         if len(x.shape) == 2:
@@ -138,7 +141,7 @@ class History_motion_embedding(nn.Module):
         pos = self.pose_encoding(q_patch).transpose(0, 1)
         n, b, d = q_patch.shape
 
-        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b).permute(1, 0, 2).contiguous()
+        cls_tokens = repeat(self.cls_token, "() n d -> b n d", b=b).permute(1, 0, 2).contiguous()
         encoder_patch = torch.cat((q_patch, cls_tokens), dim=0)
 
         for i in range(self.cascade_num):
@@ -147,4 +150,3 @@ class History_motion_embedding(nn.Module):
 
         out = en_out[0].view(b, 1, d).contiguous()
         return out
-

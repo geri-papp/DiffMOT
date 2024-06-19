@@ -1,9 +1,10 @@
 from __future__ import print_function
-import sys
-import numpy as np
-import timeit
-import os.path as osp
 
+import os.path as osp
+import sys
+import timeit
+
+import numpy as np
 from torchreid import metrics
 
 sys.path.insert(0, osp.dirname(osp.abspath(__file__)) + "/../../..")

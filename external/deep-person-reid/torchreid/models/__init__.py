@@ -1,26 +1,27 @@
 from __future__ import absolute_import
+
 import torch
 
-from .pcb import *
-from .mlfn import *
+from .densenet import *
 from .hacnn import *
-from .osnet import *
-from .senet import *
+from .inceptionresnetv2 import *
+from .inceptionv4 import *
+from .mlfn import *
+from .mobilenetv2 import *
 from .mudeep import *
 from .nasnet import *
-from .resnet import *
-from .densenet import *
-from .xception import *
+from .osnet import *
 from .osnet_ain import *
-from .resnetmid import *
-from .shufflenet import *
-from .squeezenet import *
-from .inceptionv4 import *
-from .mobilenetv2 import *
+from .pcb import *
+from .resnet import *
 from .resnet_ibn_a import *
 from .resnet_ibn_b import *
+from .resnetmid import *
+from .senet import *
+from .shufflenet import *
 from .shufflenetv2 import *
-from .inceptionresnetv2 import *
+from .squeezenet import *
+from .xception import *
 
 __model_factory = {
     # image classification models
@@ -110,6 +111,4 @@ def build_model(name, num_classes, loss="softmax", pretrained=True, use_gpu=True
     avai_models = list(__model_factory.keys())
     if name not in avai_models:
         raise KeyError("Unknown model: {}. Must be one of {}".format(name, avai_models))
-    return __model_factory[name](
-        num_classes=num_classes, loss=loss, pretrained=pretrained, use_gpu=use_gpu
-    )
+    return __model_factory[name](num_classes=num_classes, loss=loss, pretrained=pretrained, use_gpu=use_gpu)

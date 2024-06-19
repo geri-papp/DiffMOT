@@ -16,13 +16,14 @@
     with limited time cost.
 """
 
-import os
-import numpy as np
 import argparse
+import os
+
+import numpy as np
 import torch
+from gnn_reranking import *
 
 from utils import *
-from gnn_reranking import *
 
 parser = argparse.ArgumentParser(description="Reranking_is_GNN")
 parser.add_argument(

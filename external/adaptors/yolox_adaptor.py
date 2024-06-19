@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 from yolox.models import YOLOPAFPN, YOLOX, YOLOXHead
-from yolox.utils import postprocess, fuse_model
+from yolox.utils import fuse_model, postprocess
 
 
 class PostModel(nn.Module):
@@ -19,9 +19,7 @@ class PostModel(nn.Module):
         Returns Nx5, (x1, y1, x2, y2, conf)
         """
         raw = self.model(batch)
-        pred = postprocess(
-            raw, self.exp.num_classes, self.exp.test_conf, self.exp.nmsthre
-        )[0]
+        pred = postprocess(raw, self.exp.num_classes, self.exp.test_conf, self.exp.nmsthre)[0]
         if pred is not None:
             return torch.cat((pred[:, :4], (pred[:, 4] * pred[:, 5])[:, None]), dim=1)
         else:

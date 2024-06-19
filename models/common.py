@@ -1,9 +1,11 @@
-import torch
-from torch.nn import Module, Linear
-from torch.optim.lr_scheduler import LambdaLR
-import numpy as np
-import torch.nn as nn
 import math
+
+import numpy as np
+import torch
+import torch.nn as nn
+from torch.nn import Linear, Module
+from torch.optim.lr_scheduler import LambdaLR
+
 
 def reparameterize_gaussian(mean, logvar):
     std = torch.exp(0.5 * logvar)
@@ -12,7 +14,7 @@ def reparameterize_gaussian(mean, logvar):
 
 
 def gaussian_entropy(logvar):
-    const = 0.5 * float(logvar.size(1)) * (1. + np.log(np.pi * 2))
+    const = 0.5 * float(logvar.size(1)) * (1.0 + np.log(np.pi * 2))
     ent = 0.5 * logvar.sum(dim=1, keepdim=False) + const
     return ent
 
@@ -32,6 +34,7 @@ def truncated_normal_(tensor, mean=0, std=1, trunc_std=2):
     tensor.data.mul_(std).add_(mean)
     return tensor
 
+
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, dropout=0.1, max_len=5000):
         super().__init__()
@@ -40,9 +43,7 @@ class PositionalEncoding(nn.Module):
 
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(
-            torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)
-        )
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         pe = pe.unsqueeze(0).transpose(0, 1)
@@ -51,8 +52,6 @@ class PositionalEncoding(nn.Module):
     def forward(self, x):
         x = x + self.pe[: x.size(0), :]
         return self.dropout(x)
-
-
 
 
 class MFL(Module):
@@ -80,9 +79,8 @@ def get_linear_scheduler(optimizer, start_epoch, end_epoch, start_lr, end_lr):
             total = end_epoch - start_epoch
             delta = epoch - start_epoch
             frac = delta / total
-            return (1-frac) * 1.0 + frac * (end_lr / start_lr)
+            return (1 - frac) * 1.0 + frac * (end_lr / start_lr)
         else:
             return end_lr / start_lr
+
     return LambdaLR(optimizer, lr_lambda=lr_func)
-
-

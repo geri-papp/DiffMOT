@@ -9,9 +9,10 @@ detections. It is also able to match detections to tracks at more than one times
 
 import os
 import sys
-import numpy as np
-from multiprocessing.pool import Pool
 from multiprocessing import freeze_support
+from multiprocessing.pool import Pool
+
+import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from trackeval.baselines import baseline_utils as butils
@@ -19,9 +20,7 @@ from trackeval.utils import get_code_path
 
 code_path = get_code_path()
 config = {
-    "INPUT_FOL": os.path.join(
-        code_path, "data/detections/rob_mots/{split}/non_overlap_supplied/data/"
-    ),
+    "INPUT_FOL": os.path.join(code_path, "data/detections/rob_mots/{split}/non_overlap_supplied/data/"),
     "OUTPUT_FOL": os.path.join(code_path, "data/trackers/rob_mots/{split}/STP/data/"),
     "SPLIT": "train",  # valid: 'train', 'val', 'test'.
     "Benchmarks": None,  # If None, all benchmarks in SPLIT.
@@ -61,9 +60,7 @@ def track_sequence(seq_file):
             t_data = butils.threshold(t_data, config["DETECTION_THRESHOLD"])
 
             # Convert mask dets to bounding boxes.
-            boxes = butils.masks2boxes(
-                t_data["mask_rles"], t_data["im_hs"], t_data["im_ws"]
-            )
+            boxes = butils.masks2boxes(t_data["mask_rles"], t_data["im_hs"], t_data["im_ws"])
 
             # Calculate IoU between previous and current frame dets.
             ious = butils.box_iou(prev["boxes"], boxes)
@@ -79,9 +76,7 @@ def track_sequence(seq_file):
             match_rows, match_cols = butils.match(match_scores)
 
             # Remove matches that have an IoU below a certain threshold.
-            actually_matched_mask = (
-                ious[match_rows, match_cols] > config["ASSOCIATION_THRESHOLD"]
-            )
+            actually_matched_mask = ious[match_rows, match_cols] > config["ASSOCIATION_THRESHOLD"]
             match_rows = match_rows[actually_matched_mask]
             match_cols = match_cols[actually_matched_mask]
 
@@ -101,8 +96,7 @@ def track_sequence(seq_file):
             unmatched_rows = [
                 i
                 for i in range(len(prev["ids"]))
-                if i not in match_rows
-                and (prev["timesteps"][i] + 1 <= config["MAX_FRAMES_SKIP"])
+                if i not in match_rows and (prev["timesteps"][i] + 1 <= config["MAX_FRAMES_SKIP"])
             ]
 
             # Update the set of previous tracking results to include the newly tracked detections.
@@ -111,9 +105,7 @@ def track_sequence(seq_file):
                 (np.atleast_2d(boxes), np.atleast_2d(prev["boxes"][unmatched_rows])),
                 axis=0,
             )
-            prev["timesteps"] = np.concatenate(
-                (np.zeros((len(ids),)), prev["timesteps"][unmatched_rows] + 1), axis=0
-            )
+            prev["timesteps"] = np.concatenate((np.zeros((len(ids),)), prev["timesteps"][unmatched_rows] + 1), axis=0)
 
             # Save result in output format to write to file later.
             # Output Format = [timestep ID class score im_h im_w mask_RLE]
@@ -160,9 +152,7 @@ if __name__ == "__main__":
             benchmarks += ["waymo", "mots_challenge"]
     seqs_todo = []
     for bench in benchmarks:
-        bench_fol = os.path.join(
-            config["INPUT_FOL"].format(split=config["SPLIT"]), bench
-        )
+        bench_fol = os.path.join(config["INPUT_FOL"].format(split=config["SPLIT"]), bench)
         seqs_todo += [os.path.join(bench_fol, seq) for seq in os.listdir(bench_fol)]
 
     # Run in parallel

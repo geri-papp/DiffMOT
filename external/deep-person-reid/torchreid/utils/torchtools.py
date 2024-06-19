@@ -1,10 +1,12 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
+import os.path as osp
 import pickle
 import shutil
-import os.path as osp
 import warnings
-from functools import partial
 from collections import OrderedDict
+from functools import partial
+
 import torch
 import torch.nn as nn
 
@@ -205,9 +207,7 @@ def open_specified_layers(model, open_layers):
         open_layers = [open_layers]
 
     for layer in open_layers:
-        assert hasattr(
-            model, layer
-        ), '"{}" is not an attribute of the model, please provide the correct name'.format(
+        assert hasattr(model, layer), '"{}" is not an attribute of the model, please provide the correct name'.format(
             layer
         )
 

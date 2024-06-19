@@ -1,8 +1,9 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import glob
 import os.path as osp
-from scipy.io import loadmat
 
+from scipy.io import loadmat
 from torchreid.utils import read_json, write_json
 
 from ..dataset import ImageDataset
@@ -23,9 +24,7 @@ class GRID(ImageDataset):
     """
 
     dataset_dir = "grid"
-    dataset_url = (
-        "http://personal.ie.cuhk.edu.hk/~ccloy/files/datasets/underground_reid.zip"
-    )
+    dataset_url = "http://personal.ie.cuhk.edu.hk/~ccloy/files/datasets/underground_reid.zip"
     _junk_pids = [0]
 
     def __init__(self, root="", split_id=0, **kwargs):
@@ -35,9 +34,7 @@ class GRID(ImageDataset):
 
         self.probe_path = osp.join(self.dataset_dir, "underground_reid", "probe")
         self.gallery_path = osp.join(self.dataset_dir, "underground_reid", "gallery")
-        self.split_mat_path = osp.join(
-            self.dataset_dir, "underground_reid", "features_and_partitions.mat"
-        )
+        self.split_mat_path = osp.join(self.dataset_dir, "underground_reid", "features_and_partitions.mat")
         self.split_path = osp.join(self.dataset_dir, "splits.json")
 
         required_files = [

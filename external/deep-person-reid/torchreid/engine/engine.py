@@ -1,24 +1,19 @@
-from __future__ import division, print_function, absolute_import
-import time
-import numpy as np
-import os.path as osp
+from __future__ import absolute_import, division, print_function
+
 import datetime
+import os.path as osp
+import time
 from collections import OrderedDict
+
+import numpy as np
 import torch
 from torch.nn import functional as F
 from torch.utils.tensorboard import SummaryWriter
-
 from torchreid import metrics
-from torchreid.utils import (
-    MetricMeter,
-    AverageMeter,
-    re_ranking,
-    open_all_layers,
-    save_checkpoint,
-    open_specified_layers,
-    visualize_ranked_results,
-)
 from torchreid.losses import DeepSupervision
+from torchreid.utils import (AverageMeter, MetricMeter, open_all_layers,
+                             open_specified_layers, re_ranking,
+                             save_checkpoint, visualize_ranked_results)
 
 
 class Engine(object):
@@ -245,9 +240,7 @@ class Engine(object):
 
             if (self.batch_idx + 1) % print_freq == 0:
                 nb_this_epoch = self.num_batches - (self.batch_idx + 1)
-                nb_future_epochs = (
-                    self.max_epoch - (self.epoch + 1)
-                ) * self.num_batches
+                nb_future_epochs = (self.max_epoch - (self.epoch + 1)) * self.num_batches
                 eta_seconds = batch_time.avg * (nb_this_epoch + nb_future_epochs)
                 eta_str = str(datetime.timedelta(seconds=int(eta_seconds)))
                 print(
@@ -446,9 +439,7 @@ class Engine(object):
         camids = data["camid"]
         return imgs, pids, camids
 
-    def two_stepped_transfer_learning(
-        self, epoch, fixbase_epoch, open_layers, model=None
-    ):
+    def two_stepped_transfer_learning(self, epoch, fixbase_epoch, open_layers, model=None):
         """Two-stepped transfer learning.
 
         The idea is to freeze base layers for a certain number of epochs
@@ -461,11 +452,7 @@ class Engine(object):
             return
 
         if (epoch + 1) <= fixbase_epoch and open_layers is not None:
-            print(
-                "* Only train {} (epoch: {}/{})".format(
-                    open_layers, epoch + 1, fixbase_epoch
-                )
-            )
+            print("* Only train {} (epoch: {}/{})".format(open_layers, epoch + 1, fixbase_epoch))
             open_specified_layers(model, open_layers)
         else:
             open_all_layers(model)

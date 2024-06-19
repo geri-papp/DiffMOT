@@ -1,14 +1,13 @@
-from collections import OrderedDict
-from pathlib import Path
 import os
 import pickle
+from collections import OrderedDict
+from pathlib import Path
 
-import torch
 import cv2
-import torchvision
-import torchreid
 import numpy as np
-
+import torch
+import torchreid
+import torchvision
 from external.adaptors.fastreid_adaptor import FastReID
 
 
@@ -20,7 +19,6 @@ class EmbeddingComputer:
         self.crop_size = (128, 384)
         os.makedirs(config.reid_dir, exist_ok=True)
         self.cache_path = os.path.join(config.reid_dir, "{}_embedding.pkl")
-
 
         self.cache = {}
         self.cache_name = ""

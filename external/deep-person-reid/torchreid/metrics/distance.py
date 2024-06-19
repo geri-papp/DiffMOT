@@ -1,4 +1,5 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import torch
 from torch.nn import functional as F
 
@@ -34,10 +35,7 @@ def compute_distance_matrix(input1, input2, metric="euclidean"):
     elif metric == "cosine":
         distmat = cosine_distance(input1, input2)
     else:
-        raise ValueError(
-            "Unknown distance metric: {}. "
-            'Please choose either "euclidean" or "cosine"'.format(metric)
-        )
+        raise ValueError("Unknown distance metric: {}. " 'Please choose either "euclidean" or "cosine"'.format(metric))
 
     return distmat
 

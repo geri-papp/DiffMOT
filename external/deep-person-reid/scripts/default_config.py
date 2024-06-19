@@ -7,9 +7,7 @@ def get_default_config():
     # model
     cfg.model = CN()
     cfg.model.name = "resnet50"
-    cfg.model.pretrained = (
-        True  # automatically load pretrained model weights if available
-    )
+    cfg.model.pretrained = True  # automatically load pretrained model weights if available
     cfg.model.load_weights = ""  # path to model weights
     cfg.model.resume = ""  # path to checkpoint for resume training
 
@@ -25,9 +23,7 @@ def get_default_config():
     cfg.data.width = 128  # image width
     cfg.data.combineall = False  # combine train, query and gallery for training
     cfg.data.transforms = ["random_flip"]  # data augmentation
-    cfg.data.k_tfm = (
-        1  # number of times to apply augmentation to an image independently
-    )
+    cfg.data.k_tfm = 1  # number of times to apply augmentation to an image independently
     cfg.data.norm_mean = [0.485, 0.456, 0.406]  # default is imagenet mean
     cfg.data.norm_std = [0.229, 0.224, 0.225]  # default is imagenet std
     cfg.data.save_dir = "log"  # path to save log
@@ -35,13 +31,9 @@ def get_default_config():
 
     # specific datasets
     cfg.market1501 = CN()
-    cfg.market1501.use_500k_distractors = (
-        False  # add 500k distractors to the gallery set for market1501
-    )
+    cfg.market1501.use_500k_distractors = False  # add 500k distractors to the gallery set for market1501
     cfg.cuhk03 = CN()
-    cfg.cuhk03.labeled_images = (
-        False  # use labeled images, if False, use detected images
-    )
+    cfg.cuhk03.labeled_images = False  # use labeled images, if False, use detected images
     cfg.cuhk03.classic_split = False  # use classic split by Li et al. CVPR14
     cfg.cuhk03.use_metric_cuhk03 = False  # use cuhk03's metric for evaluation
 
@@ -49,15 +41,9 @@ def get_default_config():
     cfg.sampler = CN()
     cfg.sampler.train_sampler = "RandomSampler"  # sampler for source train loader
     cfg.sampler.train_sampler_t = "RandomSampler"  # sampler for target train loader
-    cfg.sampler.num_instances = (
-        4  # number of instances per identity for RandomIdentitySampler
-    )
-    cfg.sampler.num_cams = (
-        1  # number of cameras to sample in a batch (for RandomDomainSampler)
-    )
-    cfg.sampler.num_datasets = (
-        1  # number of datasets to sample in a batch (for RandomDatasetSampler)
-    )
+    cfg.sampler.num_instances = 4  # number of instances per identity for RandomIdentitySampler
+    cfg.sampler.num_cams = 1  # number of cameras to sample in a batch (for RandomDomainSampler)
+    cfg.sampler.num_datasets = 1  # number of datasets to sample in a batch (for RandomDatasetSampler)
 
     # video reid setting
     cfg.video = CN()
@@ -74,9 +60,7 @@ def get_default_config():
     cfg.train.start_epoch = 0
     cfg.train.batch_size = 32
     cfg.train.fixbase_epoch = 0  # number of epochs to fix base layers
-    cfg.train.open_layers = [
-        "classifier"
-    ]  # layers for training while keeping others frozen
+    cfg.train.open_layers = ["classifier"]  # layers for training while keeping others frozen
     cfg.train.staged_lr = False  # set different lr to different layers
     cfg.train.new_layers = ["classifier"]  # newly added layers with default lr
     cfg.train.base_lr_mult = 0.1  # learning rate multiplier for base layers
@@ -111,19 +95,13 @@ def get_default_config():
     cfg.test = CN()
     cfg.test.batch_size = 100
     cfg.test.dist_metric = "euclidean"  # distance metric, ['euclidean', 'cosine']
-    cfg.test.normalize_feature = (
-        False  # normalize feature vectors before computing distance
-    )
+    cfg.test.normalize_feature = False  # normalize feature vectors before computing distance
     cfg.test.ranks = [1, 5, 10, 20]  # cmc ranks
     cfg.test.evaluate = False  # test only
-    cfg.test.eval_freq = (
-        -1
-    )  # evaluation frequency (-1 means to only test after training)
+    cfg.test.eval_freq = -1  # evaluation frequency (-1 means to only test after training)
     cfg.test.start_eval = 0  # start to evaluate after a specific epoch
     cfg.test.rerank = False  # use person re-ranking
-    cfg.test.visrank = (
-        False  # visualize ranked results (only available when cfg.test.evaluate=True)
-    )
+    cfg.test.visrank = False  # visualize ranked results (only available when cfg.test.evaluate=True)
     cfg.test.visrank_topk = 10  # top-k ranks to visualize
 
     return cfg

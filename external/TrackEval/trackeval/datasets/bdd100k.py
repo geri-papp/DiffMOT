@@ -1,11 +1,12 @@
-import os
 import json
+import os
+
 import numpy as np
 from scipy.optimize import linear_sum_assignment
+
+from .. import _timing, utils
 from ..utils import TrackEvalException
 from ._base_dataset import _BaseDataset
-from .. import utils
-from .. import _timing
 
 
 class BDD100K(_BaseDataset):
@@ -16,12 +17,8 @@ class BDD100K(_BaseDataset):
         """Default class config values"""
         code_path = utils.get_code_path()
         default_config = {
-            "GT_FOLDER": os.path.join(
-                code_path, "data/gt/bdd100k/bdd100k_val"
-            ),  # Location of GT data
-            "TRACKERS_FOLDER": os.path.join(
-                code_path, "data/trackers/bdd100k/bdd100k_val"
-            ),  # Trackers location
+            "GT_FOLDER": os.path.join(code_path, "data/gt/bdd100k/bdd100k_val"),  # Location of GT data
+            "TRACKERS_FOLDER": os.path.join(code_path, "data/trackers/bdd100k/bdd100k_val"),  # Trackers location
             "OUTPUT_FOLDER": None,  # Where to save eval results (if None, same as TRACKERS_FOLDER)
             "TRACKERS_TO_EVAL": None,  # Filenames of trackers to eval (if None, all in folder)
             "CLASSES_TO_EVAL": [
@@ -48,9 +45,7 @@ class BDD100K(_BaseDataset):
         """Initialise dataset, checking that all required files are present"""
         super().__init__()
         # Fill non-given config values with defaults
-        self.config = utils.init_config(
-            config, self.get_default_dataset_config(), self.get_name()
-        )
+        self.config = utils.init_config(config, self.get_default_dataset_config(), self.get_name())
         self.gt_fol = self.config["GT_FOLDER"]
         self.tracker_fol = self.config["TRACKERS_FOLDER"]
         self.should_classes_combine = True
@@ -75,8 +70,7 @@ class BDD100K(_BaseDataset):
             "bicycle",
         ]
         self.class_list = [
-            cls.lower() if cls.lower() in self.valid_classes else None
-            for cls in self.config["CLASSES_TO_EVAL"]
+            cls.lower() if cls.lower() in self.valid_classes else None for cls in self.config["CLASSES_TO_EVAL"]
         ]
         if not all(self.class_list):
             raise TrackEvalException(
@@ -85,14 +79,8 @@ class BDD100K(_BaseDataset):
             )
         self.super_categories = {
             "HUMAN": [cls for cls in ["pedestrian", "rider"] if cls in self.class_list],
-            "VEHICLE": [
-                cls
-                for cls in ["car", "truck", "bus", "train"]
-                if cls in self.class_list
-            ],
-            "BIKE": [
-                cls for cls in ["motorcycle", "bicycle"] if cls in self.class_list
-            ],
+            "VEHICLE": [cls for cls in ["car", "truck", "bus", "train"] if cls in self.class_list],
+            "BIKE": [cls for cls in ["motorcycle", "bicycle"] if cls in self.class_list],
         }
         self.distractor_classes = ["other person", "trailer", "other vehicle"]
         self.class_name_to_class_id = {
@@ -113,9 +101,7 @@ class BDD100K(_BaseDataset):
         self.seq_list = []
         self.seq_lengths = {}
 
-        self.seq_list = [
-            seq_file.replace(".json", "") for seq_file in os.listdir(self.gt_fol)
-        ]
+        self.seq_list = [seq_file.replace(".json", "") for seq_file in os.listdir(self.gt_fol)]
 
         # Get trackers to eval
         if self.config["TRACKERS_TO_EVAL"] is None:
@@ -128,19 +114,13 @@ class BDD100K(_BaseDataset):
         elif (self.config["TRACKERS_TO_EVAL"] is not None) and (
             len(self.config["TRACKER_DISPLAY_NAMES"]) == len(self.tracker_list)
         ):
-            self.tracker_to_disp = dict(
-                zip(self.tracker_list, self.config["TRACKER_DISPLAY_NAMES"])
-            )
+            self.tracker_to_disp = dict(zip(self.tracker_list, self.config["TRACKER_DISPLAY_NAMES"]))
         else:
-            raise TrackEvalException(
-                "List of tracker files and tracker display names do not match."
-            )
+            raise TrackEvalException("List of tracker files and tracker display names do not match.")
 
         for tracker in self.tracker_list:
             for seq in self.seq_list:
-                curr_file = os.path.join(
-                    self.tracker_fol, tracker, self.tracker_sub_fol, seq + ".json"
-                )
+                curr_file = os.path.join(self.tracker_fol, tracker, self.tracker_sub_fol, seq + ".json")
                 if not os.path.isfile(curr_file):
                     print("Tracker file not found: " + curr_file)
                     raise TrackEvalException(
@@ -170,9 +150,7 @@ class BDD100K(_BaseDataset):
         if is_gt:
             file = os.path.join(self.gt_fol, seq + ".json")
         else:
-            file = os.path.join(
-                self.tracker_fol, tracker, self.tracker_sub_fol, seq + ".json"
-            )
+            file = os.path.join(self.tracker_fol, tracker, self.tracker_sub_fol, seq + ".json")
 
         with open(file) as f:
             data = json.load(f)
@@ -188,8 +166,7 @@ class BDD100K(_BaseDataset):
             num_timesteps = self.seq_lengths[seq]
             if num_timesteps != len(data):
                 raise TrackEvalException(
-                    "Number of ground truth and tracker timesteps do not match for sequence %s"
-                    % seq
+                    "Number of ground truth and tracker timesteps do not match for sequence %s" % seq
                 )
 
         # Convert data to required format
@@ -223,14 +200,9 @@ class BDD100K(_BaseDataset):
                         for i in keep_ids
                     ]
                 ).astype(float)
-                raw_data["ids"][t] = np.atleast_1d(
-                    [data[t]["labels"][i]["id"] for i in keep_ids]
-                ).astype(int)
+                raw_data["ids"][t] = np.atleast_1d([data[t]["labels"][i]["id"] for i in keep_ids]).astype(int)
                 raw_data["classes"][t] = np.atleast_1d(
-                    [
-                        self.class_name_to_class_id[data[t]["labels"][i]["category"]]
-                        for i in keep_ids
-                    ]
+                    [self.class_name_to_class_id[data[t]["labels"][i]["category"]] for i in keep_ids]
                 ).astype(int)
             else:
                 raw_data["dets"][t] = np.empty((0, 4)).astype(float)
@@ -251,9 +223,7 @@ class BDD100K(_BaseDataset):
                         ]
                     ).astype(float)
                 else:
-                    raw_data["gt_crowd_ignore_regions"][t] = np.empty((0, 4)).astype(
-                        float
-                    )
+                    raw_data["gt_crowd_ignore_regions"][t] = np.empty((0, 4)).astype(float)
 
         if is_gt:
             key_map = {"ids": "gt_ids", "classes": "gt_classes", "dets": "gt_dets"}
@@ -327,9 +297,7 @@ class BDD100K(_BaseDataset):
             tracker_class_mask = tracker_class_mask.astype(np.bool)
             tracker_ids = raw_data["tracker_ids"][t][tracker_class_mask]
             tracker_dets = raw_data["tracker_dets"][t][tracker_class_mask]
-            similarity_scores = raw_data["similarity_scores"][t][gt_class_mask, :][
-                :, tracker_class_mask
-            ]
+            similarity_scores = raw_data["similarity_scores"][t][gt_class_mask, :][:, tracker_class_mask]
 
             # Match tracker and gt dets (with hungarian algorithm)
             unmatched_indices = np.arange(tracker_ids.shape[0])
@@ -337,9 +305,7 @@ class BDD100K(_BaseDataset):
                 matching_scores = similarity_scores.copy()
                 matching_scores[matching_scores < 0.5 - np.finfo("float").eps] = 0
                 match_rows, match_cols = linear_sum_assignment(-matching_scores)
-                actually_matched_mask = (
-                    matching_scores[match_rows, match_cols] > 0 + np.finfo("float").eps
-                )
+                actually_matched_mask = matching_scores[match_rows, match_cols] > 0 + np.finfo("float").eps
                 match_cols = match_cols[actually_matched_mask]
                 unmatched_indices = np.delete(unmatched_indices, match_cols, axis=0)
 
@@ -385,9 +351,7 @@ class BDD100K(_BaseDataset):
             tracker_id_map[unique_tracker_ids] = np.arange(len(unique_tracker_ids))
             for t in range(raw_data["num_timesteps"]):
                 if len(data["tracker_ids"][t]) > 0:
-                    data["tracker_ids"][t] = tracker_id_map[
-                        data["tracker_ids"][t]
-                    ].astype(np.int)
+                    data["tracker_ids"][t] = tracker_id_map[data["tracker_ids"][t]].astype(np.int)
 
         # Record overview statistics.
         data["num_tracker_dets"] = num_tracker_dets
@@ -402,7 +366,5 @@ class BDD100K(_BaseDataset):
         return data
 
     def _calculate_similarities(self, gt_dets_t, tracker_dets_t):
-        similarity_scores = self._calculate_box_ious(
-            gt_dets_t, tracker_dets_t, box_format="x0y0x1y1"
-        )
+        similarity_scores = self._calculate_box_ious(gt_dets_t, tracker_dets_t, box_format="x0y0x1y1")
         return similarity_scores

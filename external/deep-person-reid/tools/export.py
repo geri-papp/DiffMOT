@@ -1,14 +1,14 @@
 import argparse
 import os
-import sys
-import numpy as np
-from pathlib import Path
-import torch
-import pandas as pd
 import subprocess
+import sys
+from pathlib import Path
 
-from torchreid.utils.feature_extractor import FeatureExtractor
+import numpy as np
+import pandas as pd
+import torch
 from torchreid.models import build_model
+from torchreid.utils.feature_extractor import FeatureExtractor
 
 __model_types = [
     "resnet50",
@@ -69,22 +69,22 @@ def export_onnx(model, im, file, opset, train=False, dynamic=True, simplify=Fals
             f,
             verbose=False,
             opset_version=opset,
-            training=torch.onnx.TrainingMode.TRAINING
-            if train
-            else torch.onnx.TrainingMode.EVAL,
+            training=torch.onnx.TrainingMode.TRAINING if train else torch.onnx.TrainingMode.EVAL,
             do_constant_folding=not train,
             input_names=["images"],
             output_names=["output"],
-            dynamic_axes={
-                "images": {
-                    0: "batch",
-                },  # shape(x,3,256,128)
-                "output": {
-                    0: "batch",
-                },  # shape(x,2048)
-            }
-            if dynamic
-            else None,
+            dynamic_axes=(
+                {
+                    "images": {
+                        0: "batch",
+                    },  # shape(x,3,256,128)
+                    "output": {
+                        0: "batch",
+                    },  # shape(x,2048)
+                }
+                if dynamic
+                else None
+            ),
         )
         # Checks
         model_onnx = onnx.load(f)  # load onnx model
@@ -108,9 +108,7 @@ def export_onnx(model, im, file, opset, train=False, dynamic=True, simplify=Fals
             except Exception as e:
                 print(f"simplifier failure: {e}")
         print(f"export success, saved as {f} ({file_size(f):.1f} MB)")
-        print(
-            f"run --dynamic ONNX model inference with: 'python detect.py --weights {f}'"
-        )
+        print(f"run --dynamic ONNX model inference with: 'python detect.py --weights {f}'")
     except Exception as e:
         print(f"export failure: {e}")
     return f
@@ -148,9 +146,7 @@ def export_tflite(file, half):
         import openvino.inference_engine as ie
 
         print(f"\nStarting export with openvino {ie.__version__}...")
-        output = Path(
-            str(file).replace(f"_openvino_model{os.sep}", f"_tflite_model{os.sep}")
-        )
+        output = Path(str(file).replace(f"_openvino_model{os.sep}", f"_tflite_model{os.sep}"))
         modelxml = list(Path(file).glob("*.xml"))[0]
         cmd = f"openvino2tensorflow \
             --model_path {modelxml} \
@@ -217,14 +213,10 @@ if __name__ == "__main__":
     include = [x.lower() for x in args.include]  # to lowercase
     fmts = tuple(export_formats()["Argument"][1:])  # --include arguments
     flags = [x in include for x in fmts]
-    assert sum(flags) == len(
-        include
-    ), f"ERROR: Invalid --include {include}, valid --include arguments are {fmts}"
+    assert sum(flags) == len(include), f"ERROR: Invalid --include {include}, valid --include arguments are {fmts}"
     onnx, openvino, tflite = flags  # export booleans
 
-    im = torch.zeros(1, 3, args.imgsz[0], args.imgsz[1]).to(
-        "cpu"
-    )  # image size(1,3,640,480) BCHW iDetection
+    im = torch.zeros(1, 3, args.imgsz[0], args.imgsz[1]).to("cpu")  # image size(1,3,640,480) BCHW iDetection
     if onnx:
         f = export_onnx(
             extractor.model.eval(),

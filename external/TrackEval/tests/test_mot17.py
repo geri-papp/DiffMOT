@@ -2,11 +2,11 @@
 Runs all metrics on 14 trackers for the MOT Challenge MOT17 benchmark.
 """
 
-
-import sys
 import os
-import numpy as np
+import sys
 from multiprocessing import freeze_support
+
+import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import trackeval  # noqa: E402
@@ -25,9 +25,7 @@ metrics_list = [
     trackeval.metrics.CLEAR(),
     trackeval.metrics.Identity(),
 ]
-test_data_loc = os.path.join(
-    os.path.dirname(__file__), "..", "data", "tests", "mot_challenge", "MOT17-train"
-)
+test_data_loc = os.path.join(os.path.dirname(__file__), "..", "data", "tests", "mot_challenge", "MOT17-train")
 trackers = [
     "DPMOT",
     "GNNMatch",
@@ -59,9 +57,7 @@ for tracker in trackers:
     metric_names = trackeval.utils.validate_metrics_list(current_metrics_list)
 
     # Load expected results:
-    test_data = trackeval.utils.load_detail(
-        os.path.join(test_data_loc, tracker, "pedestrian_detailed.csv")
-    )
+    test_data = trackeval.utils.load_detail(os.path.join(test_data_loc, tracker, "pedestrian_detailed.csv"))
     assert len(test_data.keys()) == 22, len(test_data.keys())
 
     # Do checks
@@ -70,10 +66,7 @@ for tracker in trackers:
 
         details = []
         for metric, metric_name in zip(current_metrics_list, metric_names):
-            table_res = {
-                seq_key: seq_value[metric_name]
-                for seq_key, seq_value in results.items()
-            }
+            table_res = {seq_key: seq_value[metric_name] for seq_key, seq_value in results.items()}
             details.append(metric.detailed_results(table_res))
         res_fields = sum([list(s["COMBINED_SEQ"].keys()) for s in details], [])
         res_values = sum([list(s[seq].values()) for s in details], [])

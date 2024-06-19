@@ -1,4 +1,5 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import glob
 import os.path as osp
 import warnings
@@ -48,15 +49,9 @@ class DukeMTMCVidReID(VideoDataset):
         ]
         self.check_before_run(required_files)
 
-        train = self.process_dir(
-            self.train_dir, self.split_train_json_path, relabel=True
-        )
-        query = self.process_dir(
-            self.query_dir, self.split_query_json_path, relabel=False
-        )
-        gallery = self.process_dir(
-            self.gallery_dir, self.split_gallery_json_path, relabel=False
-        )
+        train = self.process_dir(self.train_dir, self.split_train_json_path, relabel=True)
+        query = self.process_dir(self.query_dir, self.split_query_json_path, relabel=False)
+        gallery = self.process_dir(self.gallery_dir, self.split_gallery_json_path, relabel=False)
 
         super(DukeMTMCVidReID, self).__init__(train, query, gallery, **kwargs)
 
@@ -94,11 +89,7 @@ class DukeMTMCVidReID(VideoDataset):
                     img_idx_name = "F" + str(img_idx + 1).zfill(4)
                     res = glob.glob(osp.join(tdir, "*" + img_idx_name + "*.jpg"))
                     if len(res) == 0:
-                        warnings.warn(
-                            "Index name {} in {} is missing, skip".format(
-                                img_idx_name, tdir
-                            )
-                        )
+                        warnings.warn("Index name {} in {} is missing, skip".format(img_idx_name, tdir))
                         continue
                     img_paths.append(res[0])
                 img_name = osp.basename(img_paths[0])

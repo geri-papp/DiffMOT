@@ -1,8 +1,9 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import copy
 import glob
-import random
 import os.path as osp
+import random
 from collections import defaultdict
 
 from torchreid.utils import read_json, write_json
@@ -56,10 +57,7 @@ class iLIDS(ImageDataset):
             paths = glob.glob(osp.join(self.data_dir, "*.jpg"))
             img_names = [osp.basename(path) for path in paths]
             num_imgs = len(img_names)
-            assert num_imgs == 476, (
-                "There should be 476 images, but "
-                "got {}, please check the data".format(num_imgs)
-            )
+            assert num_imgs == 476, "There should be 476 images, but " "got {}, please check the data".format(num_imgs)
 
             # store image names
             # image naming format:
@@ -71,9 +69,8 @@ class iLIDS(ImageDataset):
                 pid_dict[pid].append(img_name)
             pids = list(pid_dict.keys())
             num_pids = len(pids)
-            assert num_pids == 119, (
-                "There should be 119 identities, "
-                "but got {}, please check the data".format(num_pids)
+            assert num_pids == 119, "There should be 119 identities, " "but got {}, please check the data".format(
+                num_pids
             )
 
             num_train_pids = int(num_pids * 0.5)

@@ -1,7 +1,8 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import os.path as osp
 
-from torchreid.utils import read_json, write_json, mkdir_if_missing
+from torchreid.utils import mkdir_if_missing, read_json, write_json
 
 from ..dataset import ImageDataset
 
@@ -24,14 +25,7 @@ class CUHK03(ImageDataset):
     dataset_dir = "cuhk03"
     dataset_url = None
 
-    def __init__(
-        self,
-        root="",
-        split_id=0,
-        cuhk03_labeled=False,
-        cuhk03_classic_split=False,
-        **kwargs
-    ):
+    def __init__(self, root="", split_id=0, cuhk03_labeled=False, cuhk03_classic_split=False, **kwargs):
         self.root = osp.abspath(osp.expanduser(root))
         self.dataset_dir = osp.join(self.root, self.dataset_dir)
         self.download_dataset(self.dataset_dir, self.dataset_url)
@@ -42,26 +36,14 @@ class CUHK03(ImageDataset):
         self.imgs_detected_dir = osp.join(self.dataset_dir, "images_detected")
         self.imgs_labeled_dir = osp.join(self.dataset_dir, "images_labeled")
 
-        self.split_classic_det_json_path = osp.join(
-            self.dataset_dir, "splits_classic_detected.json"
-        )
-        self.split_classic_lab_json_path = osp.join(
-            self.dataset_dir, "splits_classic_labeled.json"
-        )
+        self.split_classic_det_json_path = osp.join(self.dataset_dir, "splits_classic_detected.json")
+        self.split_classic_lab_json_path = osp.join(self.dataset_dir, "splits_classic_labeled.json")
 
-        self.split_new_det_json_path = osp.join(
-            self.dataset_dir, "splits_new_detected.json"
-        )
-        self.split_new_lab_json_path = osp.join(
-            self.dataset_dir, "splits_new_labeled.json"
-        )
+        self.split_new_det_json_path = osp.join(self.dataset_dir, "splits_new_detected.json")
+        self.split_new_lab_json_path = osp.join(self.dataset_dir, "splits_new_labeled.json")
 
-        self.split_new_det_mat_path = osp.join(
-            self.dataset_dir, "cuhk03_new_protocol_config_detected.mat"
-        )
-        self.split_new_lab_mat_path = osp.join(
-            self.dataset_dir, "cuhk03_new_protocol_config_labeled.mat"
-        )
+        self.split_new_det_mat_path = osp.join(self.dataset_dir, "cuhk03_new_protocol_config_detected.mat")
+        self.split_new_lab_mat_path = osp.join(self.dataset_dir, "cuhk03_new_protocol_config_labeled.mat")
 
         required_files = [
             self.dataset_dir,
@@ -75,22 +57,12 @@ class CUHK03(ImageDataset):
         self.preprocess_split()
 
         if cuhk03_labeled:
-            split_path = (
-                self.split_classic_lab_json_path
-                if cuhk03_classic_split
-                else self.split_new_lab_json_path
-            )
+            split_path = self.split_classic_lab_json_path if cuhk03_classic_split else self.split_new_lab_json_path
         else:
-            split_path = (
-                self.split_classic_det_json_path
-                if cuhk03_classic_split
-                else self.split_new_det_json_path
-            )
+            split_path = self.split_classic_det_json_path if cuhk03_classic_split else self.split_new_det_json_path
 
         splits = read_json(split_path)
-        assert split_id < len(
-            splits
-        ), "Condition split_id ({}) < len(splits) ({}) is false".format(
+        assert split_id < len(splits), "Condition split_id ({}) < len(splits) ({}) is false".format(
             split_id, len(splits)
         )
         split = splits[split_id]
@@ -141,9 +113,7 @@ class CUHK03(ImageDataset):
                 # viewid: index of view, {1, 2}
                 # imgid: index of image, (1-10)
                 viewid = 1 if imgid < 5 else 2
-                img_name = "{:01d}_{:03d}_{:01d}_{:02d}.png".format(
-                    campid + 1, pid + 1, viewid, imgid + 1
-                )
+                img_name = "{:01d}_{:03d}_{:01d}_{:02d}.png".format(campid + 1, pid + 1, viewid, imgid + 1)
                 img_path = osp.join(save_dir, img_name)
                 if not osp.isfile(img_path):
                     imageio.imwrite(img_path, img)
@@ -153,25 +123,15 @@ class CUHK03(ImageDataset):
         def _extract_img(image_type):
             print("Processing {} images ...".format(image_type))
             meta_data = []
-            imgs_dir = (
-                self.imgs_detected_dir
-                if image_type == "detected"
-                else self.imgs_labeled_dir
-            )
+            imgs_dir = self.imgs_detected_dir if image_type == "detected" else self.imgs_labeled_dir
             for campid, camp_ref in enumerate(mat[image_type][0]):
                 camp = _deref(camp_ref)
                 num_pids = camp.shape[0]
                 for pid in range(num_pids):
                     img_paths = _process_images(camp[pid, :], campid, pid, imgs_dir)
-                    assert len(img_paths) > 0, "campid{}-pid{} has no images".format(
-                        campid, pid
-                    )
+                    assert len(img_paths) > 0, "campid{}-pid{} has no images".format(campid, pid)
                     meta_data.append((campid + 1, pid + 1, img_paths))
-                print(
-                    "- done camera pair {} with {} identities".format(
-                        campid + 1, num_pids
-                    )
-                )
+                print("- done camera pair {} with {} identities".format(campid + 1, num_pids))
             return meta_data
 
         meta_detected = _extract_img("detected")
@@ -185,17 +145,13 @@ class CUHK03(ImageDataset):
 
                 if [campid, pid] in test_split:
                     for img_path in img_paths:
-                        camid = (
-                            int(osp.basename(img_path).split("_")[2]) - 1
-                        )  # make it 0-based
+                        camid = int(osp.basename(img_path).split("_")[2]) - 1  # make it 0-based
                         test.append((img_path, num_test_pids, camid))
                     num_test_pids += 1
                     num_test_imgs += len(img_paths)
                 else:
                     for img_path in img_paths:
-                        camid = (
-                            int(osp.basename(img_path).split("_")[2]) - 1
-                        )  # make it 0-based
+                        camid = int(osp.basename(img_path).split("_")[2]) - 1  # make it 0-based
                         train.append((img_path, num_train_pids, camid))
                     num_train_pids += 1
                     num_train_imgs += len(img_paths)
@@ -284,15 +240,9 @@ class CUHK03(ImageDataset):
             query_idxs = split_dict["query_idx"].flatten() - 1
             gallery_idxs = split_dict["gallery_idx"].flatten() - 1
             filelist = split_dict["filelist"].flatten()
-            train_info = _extract_set(
-                filelist, pids, pid2label, train_idxs, img_dir, relabel=True
-            )
-            query_info = _extract_set(
-                filelist, pids, pid2label, query_idxs, img_dir, relabel=False
-            )
-            gallery_info = _extract_set(
-                filelist, pids, pid2label, gallery_idxs, img_dir, relabel=False
-            )
+            train_info = _extract_set(filelist, pids, pid2label, train_idxs, img_dir, relabel=True)
+            query_info = _extract_set(filelist, pids, pid2label, query_idxs, img_dir, relabel=False)
+            gallery_info = _extract_set(filelist, pids, pid2label, gallery_idxs, img_dir, relabel=False)
             return train_info, query_info, gallery_info
 
         print("Creating new split for detected images (767/700) ...")

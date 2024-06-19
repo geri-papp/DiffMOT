@@ -1,9 +1,9 @@
 """Generic detector."""
+
 import os
 import pickle
 
 import torch
-
 from external.adaptors import yolox_adaptor
 
 
@@ -21,9 +21,7 @@ class Detector(torch.nn.Module):
         self.model = None
 
         os.makedirs("./cache", exist_ok=True)
-        self.cache_path = os.path.join(
-            "./cache", f"det_{os.path.basename(path).split('.')[0]}.pkl"
-        )
+        self.cache_path = os.path.join("./cache", f"det_{os.path.basename(path).split('.')[0]}.pkl")
         self.cache = {}
         if os.path.exists(self.cache_path):
             with open(self.cache_path, "rb") as fp:
