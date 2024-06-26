@@ -1,9 +1,8 @@
 import argparse
 
 import yaml
-from easydict import EasyDict
-
 from diffmot import DiffMOT
+from easydict import EasyDict
 
 
 def parse_args():

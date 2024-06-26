@@ -3,7 +3,6 @@ import warnings
 
 import torch
 import torch.nn as nn
-
 from yolox.models import YOLOPAFPN, YOLOX, YOLOXHead
 from yolox.utils import fuse_model, postprocess
 
