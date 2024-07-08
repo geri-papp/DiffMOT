@@ -1,7 +1,7 @@
-import models.diffusion as diffusion
+from . import diffusion
 import numpy as np
 import torch
-from models.diffusion import D2MP_OB, VarianceSchedule
+from .diffusion import D2MP_OB, VarianceSchedule
 from torch.nn import Module
 
 

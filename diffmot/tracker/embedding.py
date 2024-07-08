@@ -17,9 +17,9 @@ class EmbeddingComputer:
         self.dataset = dataset
         self.test_dataset = test_dataset
         self.crop_size = (128, 384)
-        os.makedirs(config.reid_dir, exist_ok=True)
-        self.cache_path = os.path.join(config.reid_dir, "{}_embedding.pkl")
-
+        # os.makedirs(config.reid_dir, exist_ok=True)
+        # self.cache_path = os.path.join(config.reid_dir, "{}_embedding.pkl")
+        self.cache_path = None
         self.cache = {}
         self.cache_name = ""
         self.grid_off = grid_off
@@ -175,7 +175,7 @@ class EmbeddingComputer:
             path = "external/weights/dance_sbs_S50.pth"
             # path = "/home/estar/lwy/DiffMOT/external/weights/dancetrack_sbs_S50_hybtid.pth"
         elif self.dataset == "sports":
-            path = "/home/estar/lwy/BoT-SORT-main/fast_reid/tools/logs/SportsMOT/sbs_S50/model_0058.pth"
+            path = "/home/geri/work/OXIT-Sport_Framework/src/submodules/fast-reid/checkpoints/sports_sbs_S50.pth"
         else:
             raise RuntimeError("Need the path for a new ReID model.")
 

@@ -9,7 +9,8 @@ from random import random
 import torch
 import torch.nn.functional as F
 from accelerate import Accelerator
-from denoising_diffusion_pytorch.version import __version__
+
+# from denoising_diffusion_pytorch.version import __version__
 from einops import rearrange, reduce
 from einops.layers.torch import Rearrange
 from ema_pytorch import EMA

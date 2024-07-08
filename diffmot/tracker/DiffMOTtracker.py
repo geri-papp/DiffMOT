@@ -8,11 +8,11 @@ import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
-from models import *
-from tracker import matching
-from tracking_utils.kalman_filter import KalmanFilter
-from tracking_utils.log import logger
-from tracking_utils.utils import *
+from diffmot.models import *
+from diffmot.tracker import matching
+from diffmot.tracking_utils.kalman_filter import KalmanFilter
+from diffmot.tracking_utils.log import logger
+from diffmot.tracking_utils.utils import *
 
 from .basetrack import BaseTrack, TrackState
 from .cmc import CMCComputer
@@ -31,7 +31,7 @@ class STrack(BaseTrack):
 
         self.conds = deque([], maxlen=5)
 
-        self._tlwh = np.asarray(tlwh, dtype=np.float)
+        self._tlwh = np.asarray(tlwh, dtype=np.float32)
         self.kalman_filter = None
         self.mean, self.covariance = None, None
         self.is_activated = False
@@ -239,24 +239,23 @@ class diffmottracker(object):
         self.mean = np.array([0.408, 0.447, 0.470], dtype=np.float32).reshape(1, 1, 3)
         self.std = np.array([0.289, 0.274, 0.278], dtype=np.float32).reshape(1, 1, 3)
 
-        # self.kalman_filter = KalmanFilter()
-        self.embedder = EmbeddingComputer(self.config, "dancetrack", False, True)
+        self.embedder = EmbeddingComputer(self.config, "sports", False, True)
         self.alpha_fixed_emb = 0.95
 
     def dump_cache(self):
         # self.cmc.dump_cache()
         self.embedder.dump_cache()
 
-    def update(self, dets_norm, model, frame_id, img_w, img_h, tag, img=None):
+    def update(self, dets, model, frame_id, img_w, img_h, tag, img=None):
+        dets = dets.detach().cpu().numpy()
         self.model = model
         self.frame_id += 1
         activated_starcks = []
         refind_stracks = []
         lost_stracks = []
         removed_stracks = []
-        dets = dets_norm.copy()
-        dets[:, 2] = dets[:, 0] + dets[:, 2]
-        dets[:, 3] = dets[:, 1] + dets[:, 3]
+        # dets[:, 2] = dets[:, 0] + dets[:, 2]
+        # dets[:, 3] = dets[:, 1] + dets[:, 3]
         remain_inds = dets[:, 4] > self.det_thresh
         inds_low = dets[:, 4] > self.config.low_thres
         inds_high = dets[:, 4] < self.det_thresh

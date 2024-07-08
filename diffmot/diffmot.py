@@ -5,15 +5,15 @@ import time
 
 import numpy as np
 import torch
-from dataset import DiffMOTDataset
-from models.autoencoder import D2MP
-from models.condition_embedding import History_motion_embedding
+from diffmot.dataset import DiffMOTDataset
+from diffmot.models.autoencoder import D2MP
+from diffmot.models.condition_embedding import History_motion_embedding
 from tensorboardX import SummaryWriter
 from torch import nn, optim, utils
 from tqdm.auto import tqdm
-from tracker.DiffMOTtracker import diffmottracker
-from tracking_utils.log import logger
-from tracking_utils.timer import Timer
+from diffmot.tracker.DiffMOTtracker import diffmottracker
+from diffmot.tracking_utils.log import logger
+from diffmot.tracking_utils.timer import Timer
 
 
 def write_results(filename, results, data_type="mot"):
@@ -144,7 +144,7 @@ class DiffMOT:
         print("> Everything built. Have fun :)")
 
     def _build_dir(self):
-        self.model_dir = osp.join("./experiments", self.config.eval_expname)
+        self.model_dir = osp.join("./outputs/diffmot", self.config.eval_expname)
         self.log_writer = SummaryWriter(log_dir=self.model_dir)
         os.makedirs(self.model_dir, exist_ok=True)
         log_name = "{}.log".format(time.strftime("%Y-%m-%d-%H-%M"))
@@ -166,7 +166,9 @@ class DiffMOT:
 
         if self.config.eval_mode:
             epoch = self.config.eval_at
-            checkpoint_dir = osp.join(self.model_dir, f"{self.config.dataset}_epoch{epoch}.pt")
+            checkpoint_dir = (
+                "/home/geri/work/OXIT-Sport_Framework/src/submodules/diffmot/checkpoints/SportsMOT_epoch1200.pt"
+            )
             self.checkpoint = torch.load(checkpoint_dir, map_location="cpu")
 
         print("> Directory built!")

@@ -1,7 +1,6 @@
 import argparse
-
 import yaml
-from diffmot import DiffMOT
+from diffmot.diffmot import DiffMOT
 from easydict import EasyDict
 
 
