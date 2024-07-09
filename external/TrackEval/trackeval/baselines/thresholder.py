@@ -8,8 +8,8 @@ Simply reads in a set of detection, thresholds them at a certain score threshold
 
 import os
 import sys
-from multiprocessing.pool import Pool
 from multiprocessing import freeze_support
+from multiprocessing.pool import Pool
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from trackeval.baselines import baseline_utils as butils
@@ -19,9 +19,7 @@ THRESHOLD = 0.2
 
 code_path = get_code_path()
 config = {
-    "INPUT_FOL": os.path.join(
-        code_path, "data/detections/rob_mots/{split}/non_overlap_supplied/data/"
-    ),
+    "INPUT_FOL": os.path.join(code_path, "data/detections/rob_mots/{split}/non_overlap_supplied/data/"),
     "OUTPUT_FOL": os.path.join(
         code_path,
         "data/detections/rob_mots/{split}/threshold_" + str(100 * THRESHOLD) + "/data/",
@@ -96,9 +94,7 @@ if __name__ == "__main__":
             benchmarks += ["waymo", "mots_challenge"]
     seqs_todo = []
     for bench in benchmarks:
-        bench_fol = os.path.join(
-            config["INPUT_FOL"].format(split=config["SPLIT"]), bench
-        )
+        bench_fol = os.path.join(config["INPUT_FOL"].format(split=config["SPLIT"]), bench)
         seqs_todo += [os.path.join(bench_fol, seq) for seq in os.listdir(bench_fol)]
 
     # Run in parallel

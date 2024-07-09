@@ -1,10 +1,11 @@
-import os
-import numpy as np
 import json
-from ._base_dataset import _BaseDataset
+import os
+
+import numpy as np
+
+from .. import _timing, utils
 from ..utils import TrackEvalException
-from .. import utils
-from .. import _timing
+from ._base_dataset import _BaseDataset
 
 
 class YouTubeVIS(_BaseDataset):
@@ -15,9 +16,7 @@ class YouTubeVIS(_BaseDataset):
         """Default class config values"""
         code_path = utils.get_code_path()
         default_config = {
-            "GT_FOLDER": os.path.join(
-                code_path, "data/gt/youtube_vis/"
-            ),  # Location of GT data
+            "GT_FOLDER": os.path.join(code_path, "data/gt/youtube_vis/"),  # Location of GT data
             "TRACKERS_FOLDER": os.path.join(code_path, "data/trackers/youtube_vis/"),
             # Trackers location
             "OUTPUT_FOLDER": None,  # Where to save eval results (if None, same as TRACKERS_FOLDER)
@@ -35,17 +34,9 @@ class YouTubeVIS(_BaseDataset):
         """Initialise dataset, checking that all required files are present"""
         super().__init__()
         # Fill non-given config values with defaults
-        self.config = utils.init_config(
-            config, self.get_default_dataset_config(), self.get_name()
-        )
-        self.gt_fol = (
-            self.config["GT_FOLDER"] + "youtube_vis_" + self.config["SPLIT_TO_EVAL"]
-        )
-        self.tracker_fol = (
-            self.config["TRACKERS_FOLDER"]
-            + "youtube_vis_"
-            + self.config["SPLIT_TO_EVAL"]
-        )
+        self.config = utils.init_config(config, self.get_default_dataset_config(), self.get_name())
+        self.gt_fol = self.config["GT_FOLDER"] + "youtube_vis_" + self.config["SPLIT_TO_EVAL"]
+        self.tracker_fol = self.config["TRACKERS_FOLDER"] + "youtube_vis_" + self.config["SPLIT_TO_EVAL"]
         self.use_super_categories = False
         self.should_classes_combine = True
 
@@ -57,30 +48,21 @@ class YouTubeVIS(_BaseDataset):
 
         if not os.path.exists(self.gt_fol):
             print("GT folder not found: " + self.gt_fol)
-            raise TrackEvalException(
-                "GT folder not found: " + os.path.basename(self.gt_fol)
-            )
-        gt_dir_files = [
-            file for file in os.listdir(self.gt_fol) if file.endswith(".json")
-        ]
+            raise TrackEvalException("GT folder not found: " + os.path.basename(self.gt_fol))
+        gt_dir_files = [file for file in os.listdir(self.gt_fol) if file.endswith(".json")]
         if len(gt_dir_files) != 1:
-            raise TrackEvalException(
-                self.gt_fol + " does not contain exactly one json file."
-            )
+            raise TrackEvalException(self.gt_fol + " does not contain exactly one json file.")
 
         with open(os.path.join(self.gt_fol, gt_dir_files[0])) as f:
             self.gt_data = json.load(f)
 
         # Get classes to eval
         self.valid_classes = [cls["name"] for cls in self.gt_data["categories"]]
-        cls_name_to_cls_id_map = {
-            cls["name"]: cls["id"] for cls in self.gt_data["categories"]
-        }
+        cls_name_to_cls_id_map = {cls["name"]: cls["id"] for cls in self.gt_data["categories"]}
 
         if self.config["CLASSES_TO_EVAL"]:
             self.class_list = [
-                cls.lower() if cls.lower() in self.valid_classes else None
-                for cls in self.config["CLASSES_TO_EVAL"]
+                cls.lower() if cls.lower() in self.valid_classes else None for cls in self.config["CLASSES_TO_EVAL"]
             ]
             if not all(self.class_list):
                 raise TrackEvalException(
@@ -90,21 +72,12 @@ class YouTubeVIS(_BaseDataset):
                 )
         else:
             self.class_list = [cls["name"] for cls in self.gt_data["categories"]]
-        self.class_name_to_class_id = {
-            k: v for k, v in cls_name_to_cls_id_map.items() if k in self.class_list
-        }
+        self.class_name_to_class_id = {k: v for k, v in cls_name_to_cls_id_map.items() if k in self.class_list}
 
         # Get sequences to eval and check gt files exist
-        self.seq_list = [
-            vid["file_names"][0].split("/")[0] for vid in self.gt_data["videos"]
-        ]
-        self.seq_name_to_seq_id = {
-            vid["file_names"][0].split("/")[0]: vid["id"]
-            for vid in self.gt_data["videos"]
-        }
-        self.seq_lengths = {
-            vid["id"]: len(vid["file_names"]) for vid in self.gt_data["videos"]
-        }
+        self.seq_list = [vid["file_names"][0].split("/")[0] for vid in self.gt_data["videos"]]
+        self.seq_name_to_seq_id = {vid["file_names"][0].split("/")[0]: vid["id"] for vid in self.gt_data["videos"]}
+        self.seq_lengths = {vid["id"]: len(vid["file_names"]) for vid in self.gt_data["videos"]}
 
         # encode masks and compute track areas
         self._prepare_gt_annotations()
@@ -120,29 +93,19 @@ class YouTubeVIS(_BaseDataset):
         elif (self.config["TRACKERS_TO_EVAL"] is not None) and (
             len(self.config["TRACKER_DISPLAY_NAMES"]) == len(self.tracker_list)
         ):
-            self.tracker_to_disp = dict(
-                zip(self.tracker_list, self.config["TRACKER_DISPLAY_NAMES"])
-            )
+            self.tracker_to_disp = dict(zip(self.tracker_list, self.config["TRACKER_DISPLAY_NAMES"]))
         else:
-            raise TrackEvalException(
-                "List of tracker files and tracker display names do not match."
-            )
+            raise TrackEvalException("List of tracker files and tracker display names do not match.")
 
         # counter for globally unique track IDs
         self.global_tid_counter = 0
 
         self.tracker_data = dict()
         for tracker in self.tracker_list:
-            tracker_dir_path = os.path.join(
-                self.tracker_fol, tracker, self.tracker_sub_fol
-            )
-            tr_dir_files = [
-                file for file in os.listdir(tracker_dir_path) if file.endswith(".json")
-            ]
+            tracker_dir_path = os.path.join(self.tracker_fol, tracker, self.tracker_sub_fol)
+            tr_dir_files = [file for file in os.listdir(tracker_dir_path) if file.endswith(".json")]
             if len(tr_dir_files) != 1:
-                raise TrackEvalException(
-                    tracker_dir_path + " does not contain exactly one json file."
-                )
+                raise TrackEvalException(tracker_dir_path + " does not contain exactly one json file.")
 
             with open(os.path.join(tracker_dir_path, tr_dir_files[0])) as f:
                 curr_data = json.load(f)
@@ -173,9 +136,7 @@ class YouTubeVIS(_BaseDataset):
         # select sequence tracks
         seq_id = self.seq_name_to_seq_id[seq]
         if is_gt:
-            tracks = [
-                ann for ann in self.gt_data["annotations"] if ann["video_id"] == seq_id
-            ]
+            tracks = [ann for ann in self.gt_data["annotations"] if ann["video_id"] == seq_id]
         else:
             tracks = self._get_tracker_seq_tracks(tracker, seq_id)
 
@@ -186,14 +147,10 @@ class YouTubeVIS(_BaseDataset):
             data_keys += ["tracker_confidences"]
         raw_data = {key: [None] * num_timesteps for key in data_keys}
         for t in range(num_timesteps):
-            raw_data["dets"][t] = [
-                track["segmentations"][t]
-                for track in tracks
-                if track["segmentations"][t]
-            ]
-            raw_data["ids"][t] = np.atleast_1d(
-                [track["id"] for track in tracks if track["segmentations"][t]]
-            ).astype(int)
+            raw_data["dets"][t] = [track["segmentations"][t] for track in tracks if track["segmentations"][t]]
+            raw_data["ids"][t] = np.atleast_1d([track["id"] for track in tracks if track["segmentations"][t]]).astype(
+                int
+            )
             raw_data["classes"][t] = np.atleast_1d(
                 [track["category_id"] for track in tracks if track["segmentations"][t]]
             ).astype(int)
@@ -214,40 +171,27 @@ class YouTubeVIS(_BaseDataset):
             raw_data[v] = raw_data.pop(k)
 
         all_cls_ids = {self.class_name_to_class_id[cls] for cls in self.class_list}
-        classes_to_tracks = {
-            cls: [track for track in tracks if track["category_id"] == cls]
-            for cls in all_cls_ids
-        }
+        classes_to_tracks = {cls: [track for track in tracks if track["category_id"] == cls] for cls in all_cls_ids}
 
         # mapping from classes to track representations and track information
         raw_data["classes_to_tracks"] = {
-            cls: [
-                {
-                    i: track["segmentations"][i]
-                    for i in range(len(track["segmentations"]))
-                }
-                for track in tracks
-            ]
+            cls: [{i: track["segmentations"][i] for i in range(len(track["segmentations"]))} for track in tracks]
             for cls, tracks in classes_to_tracks.items()
         }
         raw_data["classes_to_track_ids"] = {
-            cls: [track["id"] for track in tracks]
-            for cls, tracks in classes_to_tracks.items()
+            cls: [track["id"] for track in tracks] for cls, tracks in classes_to_tracks.items()
         }
         raw_data["classes_to_track_areas"] = {
-            cls: [track["area"] for track in tracks]
-            for cls, tracks in classes_to_tracks.items()
+            cls: [track["area"] for track in tracks] for cls, tracks in classes_to_tracks.items()
         }
 
         if is_gt:
             raw_data["classes_to_gt_track_iscrowd"] = {
-                cls: [track["iscrowd"] for track in tracks]
-                for cls, tracks in classes_to_tracks.items()
+                cls: [track["iscrowd"] for track in tracks] for cls, tracks in classes_to_tracks.items()
             }
         else:
             raw_data["classes_to_dt_track_scores"] = {
-                cls: np.array([track["score"] for track in tracks])
-                for cls, tracks in classes_to_tracks.items()
+                cls: np.array([track["score"] for track in tracks]) for cls, tracks in classes_to_tracks.items()
             }
 
         if is_gt:
@@ -323,23 +267,15 @@ class YouTubeVIS(_BaseDataset):
             gt_class_mask = np.atleast_1d(raw_data["gt_classes"][t] == cls_id)
             gt_class_mask = gt_class_mask.astype(np.bool)
             gt_ids = raw_data["gt_ids"][t][gt_class_mask]
-            gt_dets = [
-                raw_data["gt_dets"][t][ind]
-                for ind in range(len(gt_class_mask))
-                if gt_class_mask[ind]
-            ]
+            gt_dets = [raw_data["gt_dets"][t][ind] for ind in range(len(gt_class_mask)) if gt_class_mask[ind]]
 
             tracker_class_mask = np.atleast_1d(raw_data["tracker_classes"][t] == cls_id)
             tracker_class_mask = tracker_class_mask.astype(np.bool)
             tracker_ids = raw_data["tracker_ids"][t][tracker_class_mask]
             tracker_dets = [
-                raw_data["tracker_dets"][t][ind]
-                for ind in range(len(tracker_class_mask))
-                if tracker_class_mask[ind]
+                raw_data["tracker_dets"][t][ind] for ind in range(len(tracker_class_mask)) if tracker_class_mask[ind]
             ]
-            similarity_scores = raw_data["similarity_scores"][t][gt_class_mask, :][
-                :, tracker_class_mask
-            ]
+            similarity_scores = raw_data["similarity_scores"][t][gt_class_mask, :][:, tracker_class_mask]
 
             data["tracker_ids"][t] = tracker_ids
             data["tracker_dets"][t] = tracker_dets
@@ -366,9 +302,7 @@ class YouTubeVIS(_BaseDataset):
             tracker_id_map[unique_tracker_ids] = np.arange(len(unique_tracker_ids))
             for t in range(raw_data["num_timesteps"]):
                 if len(data["tracker_ids"][t]) > 0:
-                    data["tracker_ids"][t] = tracker_id_map[
-                        data["tracker_ids"][t]
-                    ].astype(np.int)
+                    data["tracker_ids"][t] = tracker_id_map[data["tracker_ids"][t]].astype(np.int)
 
         # Ensure that ids are unique per timestep.
         self._check_unique_ids(data)
@@ -394,9 +328,7 @@ class YouTubeVIS(_BaseDataset):
 
         # sort tracker data tracks by tracker confidence scores
         if data["dt_tracks"]:
-            idx = np.argsort(
-                [-score for score in data["dt_track_scores"]], kind="mergesort"
-            )
+            idx = np.argsort([-score for score in data["dt_track_scores"]], kind="mergesort")
             data["dt_track_scores"] = [data["dt_track_scores"][i] for i in idx]
             data["dt_tracks"] = [data["dt_tracks"][i] for i in idx]
             data["dt_track_ids"] = [data["dt_track_ids"][i] for i in idx]
@@ -405,9 +337,7 @@ class YouTubeVIS(_BaseDataset):
         return data
 
     def _calculate_similarities(self, gt_dets_t, tracker_dets_t):
-        similarity_scores = self._calculate_mask_ious(
-            gt_dets_t, tracker_dets_t, is_encoded=True, do_ioa=False
-        )
+        similarity_scores = self._calculate_mask_ious(gt_dets_t, tracker_dets_t, is_encoded=True, do_ioa=False)
         return similarity_scores
 
     def _prepare_gt_annotations(self):
@@ -441,9 +371,7 @@ class YouTubeVIS(_BaseDataset):
         # only loaded when needed to reduce minimum requirements
         from pycocotools import mask as mask_utils
 
-        tracks = [
-            ann for ann in self.tracker_data[tracker] if ann["video_id"] == seq_id
-        ]
+        tracks = [ann for ann in self.tracker_data[tracker] if ann["video_id"] == seq_id]
         for track in tracks:
             track["areas"] = []
             for seg in track["segmentations"]:

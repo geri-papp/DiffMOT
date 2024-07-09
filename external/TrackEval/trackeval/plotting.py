@@ -1,11 +1,11 @@
 import os
+
 import numpy as np
+
 from .utils import TrackEvalException
 
 
-def plot_compare_trackers(
-    tracker_folder, tracker_list, cls, output_folder, plots_list=None
-):
+def plot_compare_trackers(tracker_folder, tracker_list, cls, output_folder, plots_list=None):
     """Create plots which compare metrics across different trackers."""
     # Define what to plot
     if plots_list is None:
@@ -87,26 +87,17 @@ def create_comparison_plot(
         num_to_plot = settings["num_to_plot"]
 
     if (bg_label is None) != (bg_function is None):
-        raise TrackEvalException(
-            "bg_function and bg_label must either be both given or neither given."
-        )
+        raise TrackEvalException("bg_function and bg_label must either be both given or neither given.")
 
     # Extract data
     tracker_names = np.array(list(data.keys()))
     sort_index = np.array([data[t][sort_label] for t in tracker_names]).argsort()[::-1]
-    x_values = np.array([data[t][x_label] for t in tracker_names])[sort_index][
-        :num_to_plot
-    ]
-    y_values = np.array([data[t][y_label] for t in tracker_names])[sort_index][
-        :num_to_plot
-    ]
+    x_values = np.array([data[t][x_label] for t in tracker_names])[sort_index][:num_to_plot]
+    y_values = np.array([data[t][y_label] for t in tracker_names])[sort_index][:num_to_plot]
 
     # Print info on what is being plotted
     tracker_names = tracker_names[sort_index][:num_to_plot]
-    print(
-        "\nPlotting %s vs %s, for the following (ordered) trackers:"
-        % (y_label, x_label)
-    )
+    print("\nPlotting %s vs %s, for the following (ordered) trackers:" % (y_label, x_label))
     for i, name in enumerate(tracker_names):
         print("%i: %s" % (i + 1, name))
 
@@ -223,9 +214,7 @@ def _plot_bg_contour(bg_function, plot_boundaries, gap_val):
     if bg_function in bg_function_dict.keys():
         z_grid = bg_function_dict[bg_function](x_grid, y_grid)
     else:
-        raise TrackEvalException(
-            "background plotting function '%s' is not defined." % bg_function
-        )
+        raise TrackEvalException("background plotting function '%s' is not defined." % bg_function)
     levels = np.arange(0, 100, gap_val)
     con = plt.contour(x_grid, y_grid, z_grid, levels, colors="grey")
 

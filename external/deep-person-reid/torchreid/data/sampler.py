@@ -1,9 +1,11 @@
-from __future__ import division, absolute_import
+from __future__ import absolute_import, division
+
 import copy
-import numpy as np
 import random
 from collections import defaultdict
-from torch.utils.data.sampler import Sampler, RandomSampler, SequentialSampler
+
+import numpy as np
+from torch.utils.data.sampler import RandomSampler, Sampler, SequentialSampler
 
 AVAI_SAMPLERS = [
     "RandomIdentitySampler",
@@ -25,10 +27,7 @@ class RandomIdentitySampler(Sampler):
 
     def __init__(self, data_source, batch_size, num_instances):
         if batch_size < num_instances:
-            raise ValueError(
-                "batch_size={} must be no less "
-                "than num_instances={}".format(batch_size, num_instances)
-            )
+            raise ValueError("batch_size={} must be no less " "than num_instances={}".format(batch_size, num_instances))
 
         self.data_source = data_source
         self.batch_size = batch_size
@@ -204,13 +203,7 @@ class RandomDatasetSampler(Sampler):
 
 
 def build_train_sampler(
-    data_source,
-    train_sampler,
-    batch_size=32,
-    num_instances=4,
-    num_cams=1,
-    num_datasets=1,
-    **kwargs
+    data_source, train_sampler, batch_size=32, num_instances=4, num_cams=1, num_datasets=1, **kwargs
 ):
     """Builds a training sampler.
 
@@ -225,9 +218,7 @@ def build_train_sampler(
         num_datasets (int, optional): number of datasets to sample in a batch (when
             using ``RandomDatasetSampler``). Default is 1.
     """
-    assert (
-        train_sampler in AVAI_SAMPLERS
-    ), "train_sampler must be one of {}, but got {}".format(
+    assert train_sampler in AVAI_SAMPLERS, "train_sampler must be one of {}, but got {}".format(
         AVAI_SAMPLERS, train_sampler
     )
 

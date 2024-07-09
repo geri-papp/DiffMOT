@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 import trackeval
 
 
@@ -160,17 +159,10 @@ def split_tracks():
     return data, expected
 
 
-def _from_dense(
-    num_timesteps, num_gt_ids, num_tracker_ids, gt_present, tracker_present, similarity
-):
+def _from_dense(num_timesteps, num_gt_ids, num_tracker_ids, gt_present, tracker_present, similarity):
     gt_subset = [np.flatnonzero(gt_present[t, :]) for t in range(num_timesteps)]
-    tracker_subset = [
-        np.flatnonzero(tracker_present[t, :]) for t in range(num_timesteps)
-    ]
-    similarity_subset = [
-        similarity[t][gt_subset[t], :][:, tracker_subset[t]]
-        for t in range(num_timesteps)
-    ]
+    tracker_subset = [np.flatnonzero(tracker_present[t, :]) for t in range(num_timesteps)]
+    similarity_subset = [similarity[t][gt_subset[t], :][:, tracker_subset[t]] for t in range(num_timesteps)]
     data = {
         "num_timesteps": num_timesteps,
         "num_gt_ids": num_gt_ids,

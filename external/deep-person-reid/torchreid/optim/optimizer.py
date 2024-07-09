@@ -1,5 +1,7 @@
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
+
 import warnings
+
 import torch
 import torch.nn as nn
 
@@ -64,14 +66,10 @@ def build_optimizer(
         >>> )
     """
     if optim not in AVAI_OPTIMS:
-        raise ValueError(
-            "Unsupported optim: {}. Must be one of {}".format(optim, AVAI_OPTIMS)
-        )
+        raise ValueError("Unsupported optim: {}. Must be one of {}".format(optim, AVAI_OPTIMS))
 
     if not isinstance(model, nn.Module):
-        raise TypeError(
-            "model given to build_optimizer must be an instance of nn.Module"
-        )
+        raise TypeError("model given to build_optimizer must be an instance of nn.Module")
 
     if staged_lr:
         if isinstance(new_layers, str):

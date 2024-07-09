@@ -1,4 +1,4 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
 
 from torchreid import metrics
 from torchreid.engine import Engine
@@ -51,9 +51,7 @@ class ImageSoftmaxNASEngine(Engine):
         if self.fixed_lmda or self.lmda_decay_step == -1:
             lmda = self.init_lmda
         else:
-            lmda = self.init_lmda * self.lmda_decay_rate ** (
-                self.epoch // self.lmda_decay_step
-            )
+            lmda = self.init_lmda * self.lmda_decay_rate ** (self.epoch // self.lmda_decay_step)
             if lmda < self.min_lmda:
                 lmda = self.min_lmda
 

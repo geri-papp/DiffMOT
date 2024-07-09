@@ -5,15 +5,17 @@ Reference:
       performance of convolutional neural networks via attention transfer. ICLR, 2017
     - Zhou et al. Omni-Scale Feature Learning for Person Re-Identification. ICCV, 2019.
 """
-import numpy as np
-import os.path as osp
-import argparse
-import cv2
-import torch
-from torch.nn import functional as F
 
+import argparse
+import os.path as osp
+
+import cv2
+import numpy as np
+import torch
 import torchreid
-from torchreid.utils import check_isfile, mkdir_if_missing, load_pretrained_weights
+from torch.nn import functional as F
+from torchreid.utils import (check_isfile, load_pretrained_weights,
+                             mkdir_if_missing)
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
@@ -21,9 +23,7 @@ GRID_SPACING = 10
 
 
 @torch.no_grad()
-def visactmap(
-    model, test_loader, save_dir, width, height, use_gpu, img_mean=None, img_std=None
-):
+def visactmap(model, test_loader, save_dir, width, height, use_gpu, img_mean=None, img_std=None):
     if img_mean is None or img_std is None:
         # use imagenet mean and std
         img_mean = IMAGENET_MEAN
@@ -97,9 +97,7 @@ def visactmap(
 
                 # save images in a single figure (add white spacing between images)
                 # from left to right: original image, activation map, overlapped image
-                grid_img = 255 * np.ones(
-                    (height, 3 * width + 2 * GRID_SPACING, 3), dtype=np.uint8
-                )
+                grid_img = 255 * np.ones((height, 3 * width + 2 * GRID_SPACING, 3), dtype=np.uint8)
                 grid_img[:, :width, :] = img_np[:, :, ::-1]
                 grid_img[:, width + GRID_SPACING : 2 * width + GRID_SPACING, :] = am
                 grid_img[:, 2 * width + 2 * GRID_SPACING :, :] = overlapped
@@ -134,9 +132,7 @@ def main():
     )
     test_loader = datamanager.test_loader
 
-    model = torchreid.models.build_model(
-        name=args.model, num_classes=datamanager.num_train_pids, use_gpu=use_gpu
-    )
+    model = torchreid.models.build_model(name=args.model, num_classes=datamanager.num_train_pids, use_gpu=use_gpu)
 
     if use_gpu:
         model = model.cuda()

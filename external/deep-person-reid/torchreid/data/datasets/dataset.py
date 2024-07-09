@@ -1,12 +1,13 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import copy
-import numpy as np
 import os.path as osp
 import tarfile
 import zipfile
-import torch
 
-from torchreid.utils import read_image, download_url, mkdir_if_missing
+import numpy as np
+import torch
+from torchreid.utils import download_url, mkdir_if_missing, read_image
 
 
 class Dataset(object):
@@ -40,16 +41,7 @@ class Dataset(object):
     _train_only = False
 
     def __init__(
-        self,
-        train,
-        query,
-        gallery,
-        transform=None,
-        k_tfm=1,
-        mode="train",
-        combineall=False,
-        verbose=True,
-        **kwargs
+        self, train, query, gallery, transform=None, k_tfm=1, mode="train", combineall=False, verbose=True, **kwargs
     ):
         # extend 3-tuple (img_path(s), pid, camid) to
         # 4-tuple (img_path(s), pid, camid, dsetid) by
@@ -85,8 +77,7 @@ class Dataset(object):
             self.data = self.gallery
         else:
             raise ValueError(
-                "Invalid mode. Got {}, but expected to be "
-                "one of [train | query | gallery]".format(self.mode)
+                "Invalid mode. Got {}, but expected to be " "one of [train | query | gallery]".format(self.mode)
             )
 
         if self.verbose:
@@ -232,11 +223,7 @@ class Dataset(object):
         mkdir_if_missing(dataset_dir)
         fpath = osp.join(dataset_dir, osp.basename(dataset_url))
 
-        print(
-            'Downloading {} dataset to "{}"'.format(
-                self.__class__.__name__, dataset_dir
-            )
-        )
+        print('Downloading {} dataset to "{}"'.format(self.__class__.__name__, dataset_dir))
         download_url(dataset_url, fpath)
 
         print('Extracting "{}"'.format(fpath))
@@ -355,21 +342,9 @@ class ImageDataset(Dataset):
         print("  ----------------------------------------")
         print("  subset   | # ids | # images | # cameras")
         print("  ----------------------------------------")
-        print(
-            "  train    | {:5d} | {:8d} | {:9d}".format(
-                num_train_pids, len(self.train), num_train_cams
-            )
-        )
-        print(
-            "  query    | {:5d} | {:8d} | {:9d}".format(
-                num_query_pids, len(self.query), num_query_cams
-            )
-        )
-        print(
-            "  gallery  | {:5d} | {:8d} | {:9d}".format(
-                num_gallery_pids, len(self.gallery), num_gallery_cams
-            )
-        )
+        print("  train    | {:5d} | {:8d} | {:9d}".format(num_train_pids, len(self.train), num_train_cams))
+        print("  query    | {:5d} | {:8d} | {:9d}".format(num_query_pids, len(self.query), num_query_cams))
+        print("  gallery  | {:5d} | {:8d} | {:9d}".format(num_gallery_pids, len(self.gallery), num_gallery_cams))
         print("  ----------------------------------------")
 
 
@@ -384,9 +359,7 @@ class VideoDataset(Dataset):
     data in each batch has shape (batch_size, seq_len, channel, height, width).
     """
 
-    def __init__(
-        self, train, query, gallery, seq_len=15, sample_method="evenly", **kwargs
-    ):
+    def __init__(self, train, query, gallery, seq_len=15, sample_method="evenly", **kwargs):
         super(VideoDataset, self).__init__(train, query, gallery, **kwargs)
         self.seq_len = seq_len
         self.sample_method = sample_method
@@ -417,9 +390,7 @@ class VideoDataset(Dataset):
                 # until the seq_len requirement is satisfied
                 indices = np.arange(0, num_imgs)
                 num_pads = self.seq_len - num_imgs
-                indices = np.concatenate(
-                    [indices, np.ones(num_pads).astype(np.int32) * (num_imgs - 1)]
-                )
+                indices = np.concatenate([indices, np.ones(num_pads).astype(np.int32) * (num_imgs - 1)])
             assert len(indices) == self.seq_len
 
         elif self.sample_method == "all":
@@ -457,19 +428,7 @@ class VideoDataset(Dataset):
         print("  -------------------------------------------")
         print("  subset   | # ids | # tracklets | # cameras")
         print("  -------------------------------------------")
-        print(
-            "  train    | {:5d} | {:11d} | {:9d}".format(
-                num_train_pids, len(self.train), num_train_cams
-            )
-        )
-        print(
-            "  query    | {:5d} | {:11d} | {:9d}".format(
-                num_query_pids, len(self.query), num_query_cams
-            )
-        )
-        print(
-            "  gallery  | {:5d} | {:11d} | {:9d}".format(
-                num_gallery_pids, len(self.gallery), num_gallery_cams
-            )
-        )
+        print("  train    | {:5d} | {:11d} | {:9d}".format(num_train_pids, len(self.train), num_train_cams))
+        print("  query    | {:5d} | {:11d} | {:9d}".format(num_query_pids, len(self.query), num_query_cams))
+        print("  gallery  | {:5d} | {:11d} | {:9d}".format(num_gallery_pids, len(self.gallery), num_gallery_cams))
         print("  -------------------------------------------")

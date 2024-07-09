@@ -1,7 +1,9 @@
-from __future__ import division, print_function, absolute_import
-import numpy as np
+from __future__ import absolute_import, division, print_function
+
 import warnings
 from collections import defaultdict
+
+import numpy as np
 
 try:
     from torchreid.metrics.rank_cylib.rank_cy import evaluate_cy
@@ -9,10 +11,7 @@ try:
     IS_CYTHON_AVAI = True
 except ImportError:
     IS_CYTHON_AVAI = False
-    warnings.warn(
-        "Cython evaluation (very fast so highly recommended) is "
-        "unavailable, now use python evaluation."
-    )
+    warnings.warn("Cython evaluation (very fast so highly recommended) is " "unavailable, now use python evaluation.")
 
 
 def eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids, max_rank):
@@ -46,9 +45,7 @@ def eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids, max_rank):
         keep = np.invert(remove)
 
         # compute cmc curve
-        raw_cmc = matches[q_idx][
-            keep
-        ]  # binary vector, positions with value 1 are correct matches
+        raw_cmc = matches[q_idx][keep]  # binary vector, positions with value 1 are correct matches
         if not np.any(raw_cmc):
             # this condition is true when query identity does not appear in gallery
             continue
@@ -119,9 +116,7 @@ def eval_market1501(distmat, q_pids, g_pids, q_camids, g_camids, max_rank):
         keep = np.invert(remove)
 
         # compute cmc curve
-        raw_cmc = matches[q_idx][
-            keep
-        ]  # binary vector, positions with value 1 are correct matches
+        raw_cmc = matches[q_idx][keep]  # binary vector, positions with value 1 are correct matches
         if not np.any(raw_cmc):
             # this condition is true when query identity does not appear in gallery
             continue
@@ -150,9 +145,7 @@ def eval_market1501(distmat, q_pids, g_pids, q_camids, g_camids, max_rank):
     return all_cmc, mAP
 
 
-def evaluate_py(
-    distmat, q_pids, g_pids, q_camids, g_camids, max_rank, use_metric_cuhk03
-):
+def evaluate_py(distmat, q_pids, g_pids, q_camids, g_camids, max_rank, use_metric_cuhk03):
     if use_metric_cuhk03:
         return eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids, max_rank)
     else:
@@ -189,10 +182,6 @@ def evaluate_rank(
             by more than 10x. This requires Cython to be installed.
     """
     if use_cython and IS_CYTHON_AVAI:
-        return evaluate_cy(
-            distmat, q_pids, g_pids, q_camids, g_camids, max_rank, use_metric_cuhk03
-        )
+        return evaluate_cy(distmat, q_pids, g_pids, q_camids, g_camids, max_rank, use_metric_cuhk03)
     else:
-        return evaluate_py(
-            distmat, q_pids, g_pids, q_camids, g_camids, max_rank, use_metric_cuhk03
-        )
+        return evaluate_py(distmat, q_pids, g_pids, q_camids, g_camids, max_rank, use_metric_cuhk03)

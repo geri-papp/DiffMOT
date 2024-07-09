@@ -1,29 +1,17 @@
+import argparse
+import os.path as osp
 import sys
 import time
-import os.path as osp
-import argparse
+
 import torch
 import torch.nn as nn
-
 import torchreid
-from torchreid.utils import (
-    Logger,
-    check_isfile,
-    set_random_seed,
-    collect_env_info,
-    resume_from_checkpoint,
-    load_pretrained_weights,
-    compute_model_complexity,
-)
-
-from default_config import (
-    imagedata_kwargs,
-    optimizer_kwargs,
-    videodata_kwargs,
-    engine_run_kwargs,
-    get_default_config,
-    lr_scheduler_kwargs,
-)
+from default_config import (engine_run_kwargs, get_default_config,
+                            imagedata_kwargs, lr_scheduler_kwargs,
+                            optimizer_kwargs, videodata_kwargs)
+from torchreid.utils import (Logger, check_isfile, collect_env_info,
+                             compute_model_complexity, load_pretrained_weights,
+                             resume_from_checkpoint, set_random_seed)
 
 
 def build_datamanager(cfg):
@@ -99,18 +87,12 @@ def reset_config(cfg, args):
 
 def check_cfg(cfg):
     if cfg.loss.name == "triplet" and cfg.loss.triplet.weight_x == 0:
-        assert (
-            cfg.train.fixbase_epoch == 0
-        ), "The output of classifier is not included in the computational graph"
+        assert cfg.train.fixbase_epoch == 0, "The output of classifier is not included in the computational graph"
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    parser.add_argument(
-        "--config-file", type=str, default="", help="path to config file"
-    )
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--config-file", type=str, default="", help="path to config file")
     parser.add_argument(
         "-s",
         "--sources",
@@ -165,9 +147,7 @@ def main():
         pretrained=cfg.model.pretrained,
         use_gpu=cfg.use_gpu,
     )
-    num_params, flops = compute_model_complexity(
-        model, (1, 3, cfg.data.height, cfg.data.width)
-    )
+    num_params, flops = compute_model_complexity(model, (1, 3, cfg.data.height, cfg.data.width))
     print("Model complexity: params={:,} flops={:,}".format(num_params, flops))
 
     if cfg.model.load_weights and check_isfile(cfg.model.load_weights):
@@ -177,9 +157,7 @@ def main():
         model = nn.DataParallel(model).cuda()
 
     optimizer = torchreid.optim.build_optimizer(model, **optimizer_kwargs(cfg))
-    scheduler = torchreid.optim.build_lr_scheduler(
-        optimizer, **lr_scheduler_kwargs(cfg)
-    )
+    scheduler = torchreid.optim.build_lr_scheduler(optimizer, **lr_scheduler_kwargs(cfg))
 
     if cfg.model.resume and check_isfile(cfg.model.resume):
         cfg.train.start_epoch = resume_from_checkpoint(

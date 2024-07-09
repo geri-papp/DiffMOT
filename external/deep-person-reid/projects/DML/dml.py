@@ -1,10 +1,10 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import torch
 from torch.nn import functional as F
-
-from torchreid.utils import open_all_layers, open_specified_layers
 from torchreid.engine import Engine
-from torchreid.losses import TripletLoss, CrossEntropyLoss
+from torchreid.losses import CrossEntropyLoss, TripletLoss
+from torchreid.utils import open_all_layers, open_specified_layers
 
 
 class ImageDMLEngine(Engine):
@@ -105,9 +105,7 @@ class ImageDMLEngine(Engine):
             q = F.softmax(q, dim=1)
         return -(p * torch.log(q + 1e-8)).sum(1).mean()
 
-    def two_stepped_transfer_learning(
-        self, epoch, fixbase_epoch, open_layers, model=None
-    ):
+    def two_stepped_transfer_learning(self, epoch, fixbase_epoch, open_layers, model=None):
         """Two stepped transfer learning.
 
         The idea is to freeze base layers for a certain number of epochs
@@ -119,11 +117,7 @@ class ImageDMLEngine(Engine):
         model2 = self.model2
 
         if (epoch + 1) <= fixbase_epoch and open_layers is not None:
-            print(
-                "* Only train {} (epoch: {}/{})".format(
-                    open_layers, epoch + 1, fixbase_epoch
-                )
-            )
+            print("* Only train {} (epoch: {}/{})".format(open_layers, epoch + 1, fixbase_epoch))
             open_specified_layers(model1, open_layers)
             open_specified_layers(model2, open_layers)
         else:

@@ -32,9 +32,9 @@ Command Line Arguments: Defaults, # Comments
         'METRICS': ['HOTA', 'CLEAR', 'Identity', 'VACE']
 """
 
-import sys
-import os
 import argparse
+import os
+import sys
 from multiprocessing import freeze_support
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -46,9 +46,7 @@ if __name__ == "__main__":
     # Command line interface:
     default_eval_config = trackeval.Evaluator.get_default_eval_config()
     default_eval_config["DISPLAY_LESS_PROGRESS"] = False
-    default_dataset_config = (
-        trackeval.datasets.MotChallenge2DBox.get_default_dataset_config()
-    )
+    default_dataset_config = trackeval.datasets.MotChallenge2DBox.get_default_dataset_config()
     default_metrics_config = {
         "METRICS": ["HOTA", "CLEAR", "Identity"],
         "THRESHOLD": 0.5,
@@ -73,9 +71,7 @@ if __name__ == "__main__":
                 elif args[setting] == "False":
                     x = False
                 else:
-                    raise Exception(
-                        "Command line parameter " + setting + "must be True or False"
-                    )
+                    raise Exception("Command line parameter " + setting + "must be True or False")
             elif type(config[setting]) == type(1):
                 x = int(args[setting])
             elif type(args[setting]) == type(None):
@@ -86,12 +82,8 @@ if __name__ == "__main__":
                 x = args[setting]
             config[setting] = x
     eval_config = {k: v for k, v in config.items() if k in default_eval_config.keys()}
-    dataset_config = {
-        k: v for k, v in config.items() if k in default_dataset_config.keys()
-    }
-    metrics_config = {
-        k: v for k, v in config.items() if k in default_metrics_config.keys()
-    }
+    dataset_config = {k: v for k, v in config.items() if k in default_dataset_config.keys()}
+    metrics_config = {k: v for k, v in config.items() if k in default_metrics_config.keys()}
 
     # Run code
     evaluator = trackeval.Evaluator(eval_config)

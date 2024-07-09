@@ -17,8 +17,9 @@
 """
 
 import os
-import numpy as np
 import pickle
+
+import numpy as np
 import torch
 
 
@@ -74,9 +75,7 @@ def evaluate_ranking_list(indices, query_label, query_cam, gallery_label, galler
     ap = 0.0
 
     for i in range(len(query_label)):
-        ap_tmp, CMC_tmp = evaluate(
-            indices[i], query_label[i], query_cam[i], gallery_label, gallery_cam
-        )
+        ap_tmp, CMC_tmp = evaluate(indices[i], query_label[i], query_cam[i], gallery_label, gallery_cam)
         if CMC_tmp[0] == -1:
             continue
         CMC = CMC + CMC_tmp
@@ -84,10 +83,7 @@ def evaluate_ranking_list(indices, query_label, query_cam, gallery_label, galler
 
     CMC = CMC.astype(np.float32)
     CMC = CMC / len(query_label)  # average CMC
-    print(
-        "Rank@1:%f Rank@5:%f Rank@10:%f mAP:%f"
-        % (CMC[0], CMC[4], CMC[9], ap / len(query_label))
-    )
+    print("Rank@1:%f Rank@5:%f Rank@10:%f mAP:%f" % (CMC[0], CMC[4], CMC[9], ap / len(query_label)))
 
 
 def evaluate(index, ql, qc, gl, gc):

@@ -6,20 +6,18 @@ Author: Jonathon Luiten
 
 import os
 import sys
-from multiprocessing.pool import Pool
 from multiprocessing import freeze_support
+from multiprocessing.pool import Pool
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from trackeval.baselines import baseline_utils as butils
-from trackeval.utils import get_code_path
 from trackeval.datasets.rob_mots_classmap import cls_id_to_name
+from trackeval.utils import get_code_path
 
 code_path = get_code_path()
 config = {
     # Tracker format:
-    "INPUT_FOL": os.path.join(
-        code_path, "data/trackers/rob_mots/{split}/STP/data/{bench}"
-    ),
+    "INPUT_FOL": os.path.join(code_path, "data/trackers/rob_mots/{split}/STP/data/{bench}"),
     "OUTPUT_FOL": os.path.join(code_path, "data/viz/rob_mots/{split}/STP/data/{bench}"),
     # GT format:
     # 'INPUT_FOL': os.path.join(code_path, 'data/gt/rob_mots/{split}/{bench}/data/'),
@@ -53,9 +51,7 @@ def do_sequence(seq_file):
         # Run for each timestep.
         for timestep, t_data in enumerate(cls_data):
             # Save out visualization
-            out_file = os.path.join(
-                out_fol, cls_id_to_name[cls], str(timestep).zfill(5) + ".png"
-            )
+            out_file = os.path.join(out_fol, cls_id_to_name[cls], str(timestep).zfill(5) + ".png")
             butils.save_as_png(t_data, out_file, im_h, im_w)
 
     # Then run for all classes combined

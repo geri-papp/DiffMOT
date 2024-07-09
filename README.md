@@ -41,7 +41,7 @@ pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2
 ~~~
 * install other packages.
 ~~~
-pip install -r requirement.txt
+pip install -r requirements.txt
 ~~~
 * install external dependencies.
 ~~~

@@ -1,9 +1,11 @@
-import numpy as np
 import math
+
+import numpy as np
 from scipy.optimize import linear_sum_assignment
+
+from .. import _timing
 from ..utils import TrackEvalException
 from ._base_metric import _BaseMetric
-from .. import _timing
 
 
 class JAndF(_BaseMetric):
@@ -58,35 +60,23 @@ class JAndF(_BaseMetric):
             zero_padding = np.zeros((frame_shape), order="F").astype(np.uint8)
             padding_mask = mask_utils.encode(zero_padding)
             for t in range(num_timesteps):
-                gt_id_det_mapping = {
-                    gt_ids[t][i]: gt_dets[t][i] for i in range(len(gt_ids[t]))
-                }
+                gt_id_det_mapping = {gt_ids[t][i]: gt_dets[t][i] for i in range(len(gt_ids[t]))}
                 gt_dets[t] = [
-                    gt_id_det_mapping[index] if index in gt_ids[t] else padding_mask
-                    for index in range(num_gt_ids)
+                    gt_id_det_mapping[index] if index in gt_ids[t] else padding_mask for index in range(num_gt_ids)
                 ]
-                tracker_id_det_mapping = {
-                    tracker_ids[t][i]: tracker_dets[t][i]
-                    for i in range(len(tracker_ids[t]))
-                }
+                tracker_id_det_mapping = {tracker_ids[t][i]: tracker_dets[t][i] for i in range(len(tracker_ids[t]))}
                 tracker_dets[t] = [
-                    tracker_id_det_mapping[index]
-                    if index in tracker_ids[t]
-                    else padding_mask
+                    tracker_id_det_mapping[index] if index in tracker_ids[t] else padding_mask
                     for index in range(num_tracker_ids)
                 ]
             # also perform zero padding if number of tracker IDs < number of ground truth IDs
             if num_tracker_ids < num_gt_ids:
                 diff = num_gt_ids - num_tracker_ids
                 for t in range(num_timesteps):
-                    tracker_dets[t] = tracker_dets[t] + [
-                        padding_mask for _ in range(diff)
-                    ]
+                    tracker_dets[t] = tracker_dets[t] + [padding_mask for _ in range(diff)]
                 num_tracker_ids += diff
 
-        j = self._compute_j(
-            gt_dets, tracker_dets, num_gt_ids, num_tracker_ids, num_timesteps
-        )
+        j = self._compute_j(gt_dets, tracker_dets, num_gt_ids, num_tracker_ids, num_timesteps)
 
         # boundary threshold for F computation
         bound_th = 0.008
@@ -107,13 +97,9 @@ class JAndF(_BaseMetric):
             j_m = j[row_ind, col_ind, :]
             f_m = np.zeros_like(j_m)
             for i, (tr_ind, gt_ind) in enumerate(zip(row_ind, col_ind)):
-                f_m[i] = self._compute_f(
-                    gt_dets, tracker_dets, tr_ind, gt_ind, bound_th
-                )
+                f_m[i] = self._compute_f(gt_dets, tracker_dets, tr_ind, gt_ind, bound_th)
         else:
-            raise TrackEvalException(
-                "Unsupported optimization type %s for J&F metric." % self.optim_type
-            )
+            raise TrackEvalException("Unsupported optimization type %s for J&F metric." % self.optim_type)
 
         # append zeros for false negatives
         if j_m.shape[0] < data["num_gt_ids"]:
@@ -124,15 +110,9 @@ class JAndF(_BaseMetric):
         # compute the metrics for each ground truth track
         res = {
             "J-Mean": [np.nanmean(j_m[i, :]) for i in range(j_m.shape[0])],
-            "J-Recall": [
-                np.nanmean(j_m[i, :] > 0.5 + np.finfo("float").eps)
-                for i in range(j_m.shape[0])
-            ],
+            "J-Recall": [np.nanmean(j_m[i, :] > 0.5 + np.finfo("float").eps) for i in range(j_m.shape[0])],
             "F-Mean": [np.nanmean(f_m[i, :]) for i in range(f_m.shape[0])],
-            "F-Recall": [
-                np.nanmean(f_m[i, :] > 0.5 + np.finfo("float").eps)
-                for i in range(f_m.shape[0])
-            ],
+            "F-Recall": [np.nanmean(f_m[i, :] > 0.5 + np.finfo("float").eps) for i in range(f_m.shape[0])],
             "J-Decay": [],
             "F-Decay": [],
         }
@@ -158,9 +138,7 @@ class JAndF(_BaseMetric):
         """Combines metrics across all sequences"""
         res = {"num_gt_tracks": self._combine_sum(all_res, "num_gt_tracks")}
         for field in self.summary_fields:
-            res[field] = self._combine_weighted_av(
-                all_res, field, res, weight_field="num_gt_tracks"
-            )
+            res[field] = self._combine_weighted_av(all_res, field, res, weight_field="num_gt_tracks")
         return res
 
     def combine_classes_class_averaged(self, all_res, ignore_empty_classes=False):
@@ -208,9 +186,12 @@ class JAndF(_BaseMetric):
         ar1 = float(width) / float(height)
         ar2 = float(w) / float(h)
 
-        assert not (
-            width > w | height > h | abs(ar1 - ar2) > 0.01
-        ), "Can" "t convert %dx%d seg to %dx%d bmap." % (w, h, width, height)
+        assert not (width > w | height > h | abs(ar1 - ar2) > 0.01), "Can" "t convert %dx%d seg to %dx%d bmap." % (
+            w,
+            h,
+            width,
+            height,
+        )
 
         e = np.zeros_like(seg)
         s = np.zeros_like(seg)
@@ -252,9 +233,9 @@ class JAndF(_BaseMetric):
         """
 
         # Only loaded when run to reduce minimum requirements
+        import cv2
         from pycocotools import mask as mask_utils
         from skimage.morphology import disk
-        import cv2
 
         f = np.zeros(len(gt_data))
 
@@ -273,13 +254,9 @@ class JAndF(_BaseMetric):
             gt_boundary = JAndF._seg2bmap(curr_gt_mask)
 
             # fg_dil = binary_dilation(fg_boundary, disk(bound_pix))
-            fg_dil = cv2.dilate(
-                fg_boundary.astype(np.uint8), disk(bound_pix).astype(np.uint8)
-            )
+            fg_dil = cv2.dilate(fg_boundary.astype(np.uint8), disk(bound_pix).astype(np.uint8))
             # gt_dil = binary_dilation(gt_boundary, disk(bound_pix))
-            gt_dil = cv2.dilate(
-                gt_boundary.astype(np.uint8), disk(bound_pix).astype(np.uint8)
-            )
+            gt_dil = cv2.dilate(gt_boundary.astype(np.uint8), disk(bound_pix).astype(np.uint8))
 
             # Get the intersection
             gt_match = gt_boundary * fg_dil

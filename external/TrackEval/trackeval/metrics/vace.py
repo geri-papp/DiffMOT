@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.optimize import linear_sum_assignment
-from ._base_metric import _BaseMetric
+
 from .. import _timing
+from ._base_metric import _BaseMetric
 
 
 class VACE(_BaseMetric):
@@ -43,35 +44,21 @@ class VACE(_BaseMetric):
         # Obtain Average Tracking Accuracy (ATA) using track correspondence.
         # Obtain counts necessary to compute temporal IOU.
         # Assume that integer counts can be represented exactly as floats.
-        potential_matches_count = np.zeros(
-            (data["num_gt_ids"], data["num_tracker_ids"])
-        )
+        potential_matches_count = np.zeros((data["num_gt_ids"], data["num_tracker_ids"]))
         gt_id_count = np.zeros(data["num_gt_ids"])
         tracker_id_count = np.zeros(data["num_tracker_ids"])
         both_present_count = np.zeros((data["num_gt_ids"], data["num_tracker_ids"]))
-        for t, (gt_ids_t, tracker_ids_t) in enumerate(
-            zip(data["gt_ids"], data["tracker_ids"])
-        ):
+        for t, (gt_ids_t, tracker_ids_t) in enumerate(zip(data["gt_ids"], data["tracker_ids"])):
             # Count the number of frames in which two tracks satisfy the overlap criterion.
-            matches_mask = np.greater_equal(
-                data["similarity_scores"][t], self.threshold
-            )
+            matches_mask = np.greater_equal(data["similarity_scores"][t], self.threshold)
             match_idx_gt, match_idx_tracker = np.nonzero(matches_mask)
-            potential_matches_count[
-                gt_ids_t[match_idx_gt], tracker_ids_t[match_idx_tracker]
-            ] += 1
+            potential_matches_count[gt_ids_t[match_idx_gt], tracker_ids_t[match_idx_tracker]] += 1
             # Count the number of frames in which the tracks are present.
             gt_id_count[gt_ids_t] += 1
             tracker_id_count[tracker_ids_t] += 1
-            both_present_count[
-                gt_ids_t[:, np.newaxis], tracker_ids_t[np.newaxis, :]
-            ] += 1
+            both_present_count[gt_ids_t[:, np.newaxis], tracker_ids_t[np.newaxis, :]] += 1
         # Number of frames in which either track is present (union of the two sets of frames).
-        union_count = (
-            gt_id_count[:, np.newaxis]
-            + tracker_id_count[np.newaxis, :]
-            - both_present_count
-        )
+        union_count = gt_id_count[:, np.newaxis] + tracker_id_count[np.newaxis, :] - both_present_count
         # The denominator should always be non-zero if all tracks are non-empty.
         with np.errstate(divide="raise", invalid="raise"):
             temporal_iou = potential_matches_count / union_count
@@ -84,9 +71,7 @@ class VACE(_BaseMetric):
         # Obtain Frame Detection Accuracy (FDA) using per-frame correspondence.
         non_empty_count = 0
         fda = 0
-        for t, (gt_ids_t, tracker_ids_t) in enumerate(
-            zip(data["gt_ids"], data["tracker_ids"])
-        ):
+        for t, (gt_ids_t, tracker_ids_t) in enumerate(zip(data["gt_ids"], data["tracker_ids"])):
             n_g = len(gt_ids_t)
             n_d = len(tracker_ids_t)
             if not (n_g or n_d):
@@ -114,11 +99,7 @@ class VACE(_BaseMetric):
         for field in self.fields:
             if ignore_empty_classes:
                 res[field] = np.mean(
-                    [
-                        v[field]
-                        for v in all_res.values()
-                        if v["VACE_GT_IDs"] > 0 or v["VACE_IDs"] > 0
-                    ],
+                    [v[field] for v in all_res.values() if v["VACE_GT_IDs"] > 0 or v["VACE_IDs"] > 0],
                     axis=0,
                 )
             else:
@@ -145,8 +126,6 @@ class VACE(_BaseMetric):
     def _compute_final_fields(additive):
         final = {}
         with np.errstate(invalid="ignore"):  # Permit nan results.
-            final["ATA"] = additive["STDA"] / (
-                0.5 * (additive["VACE_IDs"] + additive["VACE_GT_IDs"])
-            )
+            final["ATA"] = additive["STDA"] / (0.5 * (additive["VACE_IDs"] + additive["VACE_GT_IDs"]))
             final["SFDA"] = additive["FDA"] / additive["num_non_empty_timesteps"]
         return final

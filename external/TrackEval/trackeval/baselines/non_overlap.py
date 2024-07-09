@@ -6,8 +6,8 @@ Author: Jonathon Luiten
 
 import os
 import sys
-from multiprocessing.pool import Pool
 from multiprocessing import freeze_support
+from multiprocessing.pool import Pool
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from trackeval.baselines import baseline_utils as butils
@@ -15,12 +15,8 @@ from trackeval.utils import get_code_path
 
 code_path = get_code_path()
 config = {
-    "INPUT_FOL": os.path.join(
-        code_path, "data/detections/rob_mots/{split}/raw_supplied/data/"
-    ),
-    "OUTPUT_FOL": os.path.join(
-        code_path, "data/detections/rob_mots/{split}/non_overlap_supplied/data/"
-    ),
+    "INPUT_FOL": os.path.join(code_path, "data/detections/rob_mots/{split}/raw_supplied/data/"),
+    "OUTPUT_FOL": os.path.join(code_path, "data/detections/rob_mots/{split}/non_overlap_supplied/data/"),
     "SPLIT": "train",  # valid: 'train', 'val', 'test'.
     "Benchmarks": None,  # If None, all benchmarks in SPLIT.
     "Num_Parallel_Cores": None,  # If None, run without parallel.
@@ -95,9 +91,7 @@ if __name__ == "__main__":
             benchmarks += ["waymo", "mots_challenge"]
     seqs_todo = []
     for bench in benchmarks:
-        bench_fol = os.path.join(
-            config["INPUT_FOL"].format(split=config["SPLIT"]), bench
-        )
+        bench_fol = os.path.join(config["INPUT_FOL"].format(split=config["SPLIT"]), bench)
         seqs_todo += [os.path.join(bench_fol, seq) for seq in os.listdir(bench_fol)]
 
     # Run in parallel

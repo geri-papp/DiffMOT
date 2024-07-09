@@ -1,8 +1,8 @@
-from __future__ import division, print_function, absolute_import
-import torch
+from __future__ import absolute_import, division, print_function
 
-from torchreid.data.sampler import build_train_sampler
+import torch
 from torchreid.data.datasets import init_image_dataset, init_video_dataset
+from torchreid.data.sampler import build_train_sampler
 from torchreid.data.transforms import build_transforms
 
 
@@ -148,6 +148,7 @@ class ImageDataManager(DataManager):
         # return train loader of target data
         train_loader_t = datamanager.train_loader_t
     """
+
     data_type = "image"
 
     def __init__(
@@ -232,9 +233,7 @@ class ImageDataManager(DataManager):
             # check if sources and targets are identical
             assert (
                 len(set(self.sources) & set(self.targets)) == 0
-            ), "sources={} and targets={} must not have overlap".format(
-                self.sources, self.targets
-            )
+            ), "sources={} and targets={} must not have overlap".format(self.sources, self.targets)
 
             print("=> Loading train (target) dataset")
             trainset_t = []
@@ -272,12 +271,8 @@ class ImageDataManager(DataManager):
             )
 
         print("=> Loading test (target) dataset")
-        self.test_loader = {
-            name: {"query": None, "gallery": None} for name in self.targets
-        }
-        self.test_dataset = {
-            name: {"query": None, "gallery": None} for name in self.targets
-        }
+        self.test_loader = {name: {"query": None, "gallery": None} for name in self.targets}
+        self.test_dataset = {name: {"query": None, "gallery": None} for name in self.targets}
 
         for name in self.targets:
             # build query loader
@@ -399,6 +394,7 @@ class VideoDataManager(DataManager):
         training, you need to modify the transformation functions for video reid such that each function
         applies the same operation to all images in a tracklet to keep consistency.
     """
+
     data_type = "video"
 
     def __init__(
@@ -475,12 +471,8 @@ class VideoDataManager(DataManager):
         )
 
         print("=> Loading test (target) dataset")
-        self.test_loader = {
-            name: {"query": None, "gallery": None} for name in self.targets
-        }
-        self.test_dataset = {
-            name: {"query": None, "gallery": None} for name in self.targets
-        }
+        self.test_loader = {name: {"query": None, "gallery": None} for name in self.targets}
+        self.test_dataset = {name: {"query": None, "gallery": None} for name in self.targets}
 
         for name in self.targets:
             # build query loader

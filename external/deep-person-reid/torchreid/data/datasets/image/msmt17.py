@@ -1,4 +1,5 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import os.path as osp
 
 from ..dataset import ImageDataset
@@ -58,9 +59,7 @@ class MSMT17(ImageDataset):
         self.list_train_path = osp.join(self.dataset_dir, main_dir, "list_train.txt")
         self.list_val_path = osp.join(self.dataset_dir, main_dir, "list_val.txt")
         self.list_query_path = osp.join(self.dataset_dir, main_dir, "list_query.txt")
-        self.list_gallery_path = osp.join(
-            self.dataset_dir, main_dir, "list_gallery.txt"
-        )
+        self.list_gallery_path = osp.join(self.dataset_dir, main_dir, "list_gallery.txt")
 
         required_files = [self.dataset_dir, self.train_dir, self.test_dir]
         self.check_before_run(required_files)

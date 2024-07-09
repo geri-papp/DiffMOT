@@ -1,39 +1,26 @@
 from __future__ import division, print_function
-import sys
+
 import copy
-import time
-import numpy as np
-import os.path as osp
 import datetime
+import os.path as osp
+import sys
+import time
 import warnings
+
+import datasets
+import models
+import numpy as np
 import torch
 import torch.nn as nn
-
 import torchreid
-from torchreid.utils import (
-    Logger,
-    AverageMeter,
-    check_isfile,
-    open_all_layers,
-    save_checkpoint,
-    set_random_seed,
-    collect_env_info,
-    open_specified_layers,
-    load_pretrained_weights,
-    compute_model_complexity,
-)
-from torchreid.data.transforms import (
-    Resize,
-    Compose,
-    ToTensor,
-    Normalize,
-    Random2DTranslation,
-    RandomHorizontalFlip,
-)
-
-import models
-import datasets
-from default_parser import init_parser, optimizer_kwargs, lr_scheduler_kwargs
+from default_parser import init_parser, lr_scheduler_kwargs, optimizer_kwargs
+from torchreid.data.transforms import (Compose, Normalize, Random2DTranslation,
+                                       RandomHorizontalFlip, Resize, ToTensor)
+from torchreid.utils import (AverageMeter, Logger, check_isfile,
+                             collect_env_info, compute_model_complexity,
+                             load_pretrained_weights, open_all_layers,
+                             open_specified_layers, save_checkpoint,
+                             set_random_seed)
 
 parser = init_parser()
 args = parser.parse_args()
@@ -53,17 +40,11 @@ def init_dataset(use_gpu):
 
     transform_te = Compose([Resize([args.height, args.width]), ToTensor(), normalize])
 
-    trainset = datasets.init_dataset(
-        args.dataset, root=args.root, transform=transform_tr, mode="train", verbose=True
-    )
+    trainset = datasets.init_dataset(args.dataset, root=args.root, transform=transform_tr, mode="train", verbose=True)
 
-    valset = datasets.init_dataset(
-        args.dataset, root=args.root, transform=transform_te, mode="val", verbose=False
-    )
+    valset = datasets.init_dataset(args.dataset, root=args.root, transform=transform_te, mode="val", verbose=False)
 
-    testset = datasets.init_dataset(
-        args.dataset, root=args.root, transform=transform_te, mode="test", verbose=False
-    )
+    testset = datasets.init_dataset(args.dataset, root=args.root, transform=transform_te, mode="test", verbose=False)
 
     num_attrs = trainset.num_attrs
     attr_dict = trainset.attr_dict
@@ -141,9 +122,7 @@ def main():
         criterion = nn.BCEWithLogitsLoss()
 
     print("Building model: {}".format(args.arch))
-    model = models.build_model(
-        args.arch, num_attrs, pretrained=not args.no_pretrained, use_gpu=use_gpu
-    )
+    model = models.build_model(args.arch, num_attrs, pretrained=not args.no_pretrained, use_gpu=use_gpu)
     num_params, flops = compute_model_complexity(model, (1, 3, args.height, args.width))
     print("Model complexity: params={:,} flops={:,}".format(num_params, flops))
 
@@ -159,9 +138,7 @@ def main():
         return
 
     optimizer = torchreid.optim.build_optimizer(model, **optimizer_kwargs(args))
-    scheduler = torchreid.optim.build_lr_scheduler(
-        optimizer, **lr_scheduler_kwargs(args)
-    )
+    scheduler = torchreid.optim.build_lr_scheduler(optimizer, **lr_scheduler_kwargs(args))
 
     start_epoch = args.start_epoch
     best_result = -np.inf
@@ -208,11 +185,7 @@ def train(epoch, model, criterion, optimizer, scheduler, trainloader, use_gpu):
     model.train()
 
     if (epoch + 1) <= args.fixbase_epoch and args.open_layers is not None:
-        print(
-            "* Only train {} (epoch: {}/{})".format(
-                args.open_layers, epoch + 1, args.fixbase_epoch
-            )
-        )
+        print("* Only train {} (epoch: {}/{})".format(args.open_layers, epoch + 1, args.fixbase_epoch))
         open_specified_layers(model, args.open_layers)
     else:
         open_all_layers(model)
@@ -240,9 +213,7 @@ def train(epoch, model, criterion, optimizer, scheduler, trainloader, use_gpu):
             # estimate remaining time
             num_batches = len(trainloader)
             eta_seconds = batch_time.avg * (
-                num_batches
-                - (batch_idx + 1)
-                + (args.max_epoch - (epoch + 1)) * num_batches
+                num_batches - (batch_idx + 1) + (args.max_epoch - (epoch + 1)) * num_batches
             )
             eta_str = str(datetime.timedelta(seconds=int(eta_seconds)))
             print(
@@ -345,11 +316,7 @@ def test(model, testloader, attr_dict, use_gpu):
                 txtfile.write("\n\n")
             txtfile.close()
 
-    print(
-        "=> BatchTime(s)/BatchSize(img): {:.4f}/{}".format(
-            batch_time.avg, args.batch_size
-        )
-    )
+    print("=> BatchTime(s)/BatchSize(img): {:.4f}/{}".format(batch_time.avg, args.batch_size))
 
     ins_acc /= num_persons
     ins_prec /= num_persons

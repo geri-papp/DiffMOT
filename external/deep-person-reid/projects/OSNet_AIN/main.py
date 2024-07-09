@@ -1,30 +1,20 @@
+import argparse
 import os
+import os.path as osp
 import sys
 import time
-import os.path as osp
-import argparse
-import torch
-import torch.nn as nn
-
-import torchreid
-from torchreid.utils import (
-    Logger,
-    check_isfile,
-    set_random_seed,
-    collect_env_info,
-    resume_from_checkpoint,
-    compute_model_complexity,
-)
 
 import osnet_search as osnet_models
+import torch
+import torch.nn as nn
+import torchreid
+from default_config import (engine_run_kwargs, get_default_config,
+                            imagedata_kwargs, lr_scheduler_kwargs,
+                            optimizer_kwargs)
 from softmax_nas import ImageSoftmaxNASEngine
-from default_config import (
-    imagedata_kwargs,
-    optimizer_kwargs,
-    engine_run_kwargs,
-    get_default_config,
-    lr_scheduler_kwargs,
-)
+from torchreid.utils import (Logger, check_isfile, collect_env_info,
+                             compute_model_complexity, resume_from_checkpoint,
+                             set_random_seed)
 
 
 def reset_config(cfg, args):
@@ -39,12 +29,8 @@ def reset_config(cfg, args):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    parser.add_argument(
-        "--config-file", type=str, default="", help="path to config file"
-    )
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--config-file", type=str, default="", help="path to config file")
     parser.add_argument(
         "-s",
         "--sources",
@@ -99,26 +85,18 @@ def main():
     datamanager = torchreid.data.ImageDataManager(**imagedata_kwargs(cfg))
 
     print("Building model: {}".format(cfg.model.name))
-    model = osnet_models.build_model(
-        cfg.model.name, num_classes=datamanager.num_train_pids
-    )
-    num_params, flops = compute_model_complexity(
-        model, (1, 3, cfg.data.height, cfg.data.width)
-    )
+    model = osnet_models.build_model(cfg.model.name, num_classes=datamanager.num_train_pids)
+    num_params, flops = compute_model_complexity(model, (1, 3, cfg.data.height, cfg.data.width))
     print("Model complexity: params={:,} flops={:,}".format(num_params, flops))
 
     if cfg.use_gpu:
         model = nn.DataParallel(model).cuda()
 
     optimizer = torchreid.optim.build_optimizer(model, **optimizer_kwargs(cfg))
-    scheduler = torchreid.optim.build_lr_scheduler(
-        optimizer, **lr_scheduler_kwargs(cfg)
-    )
+    scheduler = torchreid.optim.build_lr_scheduler(optimizer, **lr_scheduler_kwargs(cfg))
 
     if cfg.model.resume and check_isfile(cfg.model.resume):
-        cfg.train.start_epoch = resume_from_checkpoint(
-            cfg.model.resume, model, optimizer=optimizer
-        )
+        cfg.train.start_epoch = resume_from_checkpoint(cfg.model.resume, model, optimizer=optimizer)
 
     print("Building NAS engine")
     engine = ImageSoftmaxNASEngine(

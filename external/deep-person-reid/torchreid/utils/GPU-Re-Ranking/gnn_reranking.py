@@ -16,11 +16,11 @@
     with limited time cost.
 """
 
+import build_adjacency_matrix
+import gnn_propagate
 import numpy as np
 import torch
 
-import gnn_propagate
-import build_adjacency_matrix
 from utils import *
 
 
@@ -51,12 +51,8 @@ def gnn_reranking(X_q, X_g, k1, k2):
             A = A.div(A_norm.expand_as(A))
 
     cosine_similarity = torch.mm(
-        A[
-            :query_num,
-        ],
-        A[
-            query_num:,
-        ].t(),
+        A[:query_num,],
+        A[query_num:,].t(),
     )
     del A, S
 

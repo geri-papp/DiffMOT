@@ -1,30 +1,19 @@
-import sys
-import copy
-import time
-import os.path as osp
 import argparse
+import copy
+import os.path as osp
+import sys
+import time
+
 import torch
 import torch.nn as nn
-
 import torchreid
-from torchreid.utils import (
-    Logger,
-    check_isfile,
-    set_random_seed,
-    collect_env_info,
-    resume_from_checkpoint,
-    load_pretrained_weights,
-    compute_model_complexity,
-)
-
+from default_config import (engine_run_kwargs, get_default_config,
+                            imagedata_kwargs, lr_scheduler_kwargs,
+                            optimizer_kwargs)
 from dml import ImageDMLEngine
-from default_config import (
-    imagedata_kwargs,
-    optimizer_kwargs,
-    engine_run_kwargs,
-    get_default_config,
-    lr_scheduler_kwargs,
-)
+from torchreid.utils import (Logger, check_isfile, collect_env_info,
+                             compute_model_complexity, load_pretrained_weights,
+                             resume_from_checkpoint, set_random_seed)
 
 
 def reset_config(cfg, args):
@@ -39,12 +28,8 @@ def reset_config(cfg, args):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    parser.add_argument(
-        "--config-file", type=str, default="", help="path to config file"
-    )
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--config-file", type=str, default="", help="path to config file")
     parser.add_argument(
         "-s",
         "--sources",
@@ -98,9 +83,7 @@ def main():
         pretrained=cfg.model.pretrained,
         use_gpu=cfg.use_gpu,
     )
-    num_params, flops = compute_model_complexity(
-        model1, (1, 3, cfg.data.height, cfg.data.width)
-    )
+    num_params, flops = compute_model_complexity(model1, (1, 3, cfg.data.height, cfg.data.width))
     print("Model complexity: params={:,} flops={:,}".format(num_params, flops))
 
     print("Copying model-1 to model-2")
@@ -117,14 +100,10 @@ def main():
         model2 = nn.DataParallel(model2).cuda()
 
     optimizer1 = torchreid.optim.build_optimizer(model1, **optimizer_kwargs(cfg))
-    scheduler1 = torchreid.optim.build_lr_scheduler(
-        optimizer1, **lr_scheduler_kwargs(cfg)
-    )
+    scheduler1 = torchreid.optim.build_lr_scheduler(optimizer1, **lr_scheduler_kwargs(cfg))
 
     optimizer2 = torchreid.optim.build_optimizer(model2, **optimizer_kwargs(cfg))
-    scheduler2 = torchreid.optim.build_lr_scheduler(
-        optimizer2, **lr_scheduler_kwargs(cfg)
-    )
+    scheduler2 = torchreid.optim.build_lr_scheduler(optimizer2, **lr_scheduler_kwargs(cfg))
 
     if cfg.model.resume1 and check_isfile(cfg.model.resume1):
         cfg.train.start_epoch = resume_from_checkpoint(
@@ -132,9 +111,7 @@ def main():
         )
 
     if cfg.model.resume2 and check_isfile(cfg.model.resume2):
-        resume_from_checkpoint(
-            cfg.model.resume2, model2, optimizer=optimizer2, scheduler=scheduler2
-        )
+        resume_from_checkpoint(cfg.model.resume2, model2, optimizer=optimizer2, scheduler=scheduler2)
 
     print("Building DML-engine for image-reid")
     engine = ImageDMLEngine(

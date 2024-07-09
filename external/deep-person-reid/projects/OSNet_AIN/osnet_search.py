@@ -1,4 +1,5 @@
-from __future__ import division, absolute_import
+from __future__ import absolute_import, division
+
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -94,9 +95,7 @@ class Conv1x1Linear(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride=1, bn=True):
         super(Conv1x1Linear, self).__init__()
-        self.conv = nn.Conv2d(
-            in_channels, out_channels, 1, stride=stride, padding=0, bias=False
-        )
+        self.conv = nn.Conv2d(in_channels, out_channels, 1, stride=stride, padding=0, bias=False)
         self.bn = None
         if bn:
             self.bn = nn.BatchNorm2d(out_channels, affine=NORM_AFFINE)
@@ -139,9 +138,7 @@ class LightConv3x3(nn.Module):
 
     def __init__(self, in_channels, out_channels):
         super(LightConv3x3, self).__init__()
-        self.conv1 = nn.Conv2d(
-            in_channels, out_channels, 1, stride=1, padding=0, bias=False
-        )
+        self.conv1 = nn.Conv2d(in_channels, out_channels, 1, stride=1, padding=0, bias=False)
         self.conv2 = nn.Conv2d(
             out_channels,
             out_channels,
@@ -166,9 +163,7 @@ class LightConvStream(nn.Module):
 
     def __init__(self, in_channels, out_channels, depth):
         super(LightConvStream, self).__init__()
-        assert depth >= 1, "depth must be equal to or larger than 1, but got {}".format(
-            depth
-        )
+        assert depth >= 1, "depth must be equal to or larger than 1, but got {}".format(depth)
         layers = []
         layers += [LightConv3x3(in_channels, out_channels)]
         for i in range(depth - 1):
@@ -199,16 +194,12 @@ class ChannelGate(nn.Module):
             num_gates = in_channels
         self.return_gates = return_gates
         self.global_avgpool = nn.AdaptiveAvgPool2d(1)
-        self.fc1 = nn.Conv2d(
-            in_channels, in_channels // reduction, kernel_size=1, bias=True, padding=0
-        )
+        self.fc1 = nn.Conv2d(in_channels, in_channels // reduction, kernel_size=1, bias=True, padding=0)
         self.norm1 = None
         if layer_norm:
             self.norm1 = nn.LayerNorm((in_channels // reduction, 1, 1))
         self.relu = nn.ReLU(inplace=True)
-        self.fc2 = nn.Conv2d(
-            in_channels // reduction, num_gates, kernel_size=1, bias=True, padding=0
-        )
+        self.fc2 = nn.Conv2d(in_channels // reduction, num_gates, kernel_size=1, bias=True, padding=0)
         if gate_activation == "sigmoid":
             self.gate_activation = nn.Sigmoid()
         elif gate_activation == "relu":
@@ -428,15 +419,7 @@ class OSNet(nn.Module):
     """
 
     def __init__(
-        self,
-        num_classes,
-        blocks,
-        layers,
-        channels,
-        feature_dim=512,
-        loss="softmax",
-        search_space=None,
-        **kwargs
+        self, num_classes, blocks, layers, channels, feature_dim=512, loss="softmax", search_space=None, **kwargs
     ):
         super(OSNet, self).__init__()
         num_blocks = len(blocks)
@@ -449,27 +432,15 @@ class OSNet(nn.Module):
         # convolutional backbone
         self.conv1 = ConvLayer(3, channels[0], 7, stride=2, padding=3, IN=True)
         self.maxpool = nn.MaxPool2d(3, stride=2, padding=1)
-        self.conv2 = self._make_layer(
-            blocks[0], layers[0], channels[0], channels[1], search_space
-        )
-        self.pool2 = nn.Sequential(
-            Conv1x1(channels[1], channels[1]), nn.AvgPool2d(2, stride=2)
-        )
-        self.conv3 = self._make_layer(
-            blocks[1], layers[1], channels[1], channels[2], search_space
-        )
-        self.pool3 = nn.Sequential(
-            Conv1x1(channels[2], channels[2]), nn.AvgPool2d(2, stride=2)
-        )
-        self.conv4 = self._make_layer(
-            blocks[2], layers[2], channels[2], channels[3], search_space
-        )
+        self.conv2 = self._make_layer(blocks[0], layers[0], channels[0], channels[1], search_space)
+        self.pool2 = nn.Sequential(Conv1x1(channels[1], channels[1]), nn.AvgPool2d(2, stride=2))
+        self.conv3 = self._make_layer(blocks[1], layers[1], channels[1], channels[2], search_space)
+        self.pool3 = nn.Sequential(Conv1x1(channels[2], channels[2]), nn.AvgPool2d(2, stride=2))
+        self.conv4 = self._make_layer(blocks[2], layers[2], channels[2], channels[3], search_space)
         self.conv5 = Conv1x1(channels[3], channels[3])
         self.global_avgpool = nn.AdaptiveAvgPool2d(1)
         # fully connected layer
-        self.fc = self._construct_fc_layer(
-            self.feature_dim, channels[3], dropout_p=None
-        )
+        self.fc = self._construct_fc_layer(self.feature_dim, channels[3], dropout_p=None)
         # identity classification layer
         self.classifier = nn.Linear(self.feature_dim, num_classes)
 

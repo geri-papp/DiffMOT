@@ -5,7 +5,7 @@ eval_mode: True
 # optimizer
 lr: 0.0001
 # train
-data_dir: '/mnt/8T/home/estar/data/DanceTrack/trackers_gt_GSI'
+data_dir: '/home/geri/work/datasets/sportsmot_publish/dataset/trackers_gt_t/train'
 diffnet: HMINet
 interval: 5
 augment: True
@@ -19,10 +19,10 @@ gpus: [0,1,2,3]
 
 # Testing
 eval_at: 1200
-det_dir: "/mnt/8T/home/estar/data/DanceTrack/detections/val"
-info_dir: '/mnt/8T/home/estar/data/DanceTrack/val'
-reid_dir: "/home/estar/lwy/DiffMOT/cache/embeddings/"
-save_dir: "/mnt/8T/home/estar/data/DanceTrack/results/val/yolox_m_lt_ddm_1000eps_deeper_800_1rev"
+det_dir: "/home/geri/work/datasets/sportsmot_publish/dataset/detections/val/"
+info_dir: '/home/geri/work/datasets/sportsmot_publish/dataset/val/'
+reid_dir: "/home/geri/work/OXIT-Sport_Framework/src/submodules/diffmot/embeddings/SportsMOT/embeddings_yolox_x/"
+save_dir: "/diffmot/"
 eval_expname: lt_ddm_1000_deeper
 high_thres: 0.6
 low_thres: 0.4

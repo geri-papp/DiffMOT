@@ -1,8 +1,9 @@
-from __future__ import division, print_function, absolute_import
+from __future__ import absolute_import, division, print_function
+
 import glob
-import numpy as np
 import os.path as osp
 
+import numpy as np
 from torchreid.utils import read_json, write_json
 
 from ..dataset import ImageDataset
@@ -81,9 +82,7 @@ class VIPeR(ImageDataset):
                 np.random.shuffle(order)
                 train_idxs = order[:num_train_pids]
                 test_idxs = order[num_train_pids:]
-                assert not bool(
-                    set(train_idxs) & set(test_idxs)
-                ), "Error: train and test overlap"
+                assert not bool(set(train_idxs) & set(test_idxs)), "Error: train and test overlap"
 
                 train = []
                 for pid, idx in enumerate(train_idxs):

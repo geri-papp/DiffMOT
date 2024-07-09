@@ -1,8 +1,10 @@
-from __future__ import print_function, absolute_import
-import numpy as np
-import shutil
+from __future__ import absolute_import, print_function
+
 import os.path as osp
+import shutil
+
 import cv2
+import numpy as np
 
 from .tools import mkdir_if_missing
 
@@ -15,9 +17,7 @@ GREEN = (0, 255, 0)
 RED = (0, 0, 255)
 
 
-def visualize_ranked_results(
-    distmat, dataset, data_type, width=128, height=256, save_dir="", topk=10
-):
+def visualize_ranked_results(distmat, dataset, data_type, width=128, height=256, save_dir="", topk=10):
     """Visualizes ranked results.
 
     Supports both image-reid and video-reid.
@@ -67,23 +67,17 @@ def visualize_ranked_results(
             for img_path in src:
                 shutil.copy(img_path, dst)
         else:
-            dst = osp.join(
-                dst, prefix + "_top" + str(rank).zfill(3) + "_name_" + osp.basename(src)
-            )
+            dst = osp.join(dst, prefix + "_top" + str(rank).zfill(3) + "_name_" + osp.basename(src))
             shutil.copy(src, dst)
 
     for q_idx in range(num_q):
         qimg_path, qpid, qcamid = query[q_idx][:3]
-        qimg_path_name = (
-            qimg_path[0] if isinstance(qimg_path, (tuple, list)) else qimg_path
-        )
+        qimg_path_name = qimg_path[0] if isinstance(qimg_path, (tuple, list)) else qimg_path
 
         if data_type == "image":
             qimg = cv2.imread(qimg_path)
             qimg = cv2.resize(qimg, (width, height))
-            qimg = cv2.copyMakeBorder(
-                qimg, BW, BW, BW, BW, cv2.BORDER_CONSTANT, value=(0, 0, 0)
-            )
+            qimg = cv2.copyMakeBorder(qimg, BW, BW, BW, BW, cv2.BORDER_CONSTANT, value=(0, 0, 0))
             # resize twice to ensure that the border width is consistent across images
             qimg = cv2.resize(qimg, (width, height))
             num_cols = topk + 1
@@ -112,18 +106,10 @@ def visualize_ranked_results(
                     border_color = GREEN if matched else RED
                     gimg = cv2.imread(gimg_path)
                     gimg = cv2.resize(gimg, (width, height))
-                    gimg = cv2.copyMakeBorder(
-                        gimg, BW, BW, BW, BW, cv2.BORDER_CONSTANT, value=border_color
-                    )
+                    gimg = cv2.copyMakeBorder(gimg, BW, BW, BW, BW, cv2.BORDER_CONSTANT, value=border_color)
                     gimg = cv2.resize(gimg, (width, height))
-                    start = (
-                        rank_idx * width + rank_idx * GRID_SPACING + QUERY_EXTRA_SPACING
-                    )
-                    end = (
-                        (rank_idx + 1) * width
-                        + rank_idx * GRID_SPACING
-                        + QUERY_EXTRA_SPACING
-                    )
+                    start = rank_idx * width + rank_idx * GRID_SPACING + QUERY_EXTRA_SPACING
+                    end = (rank_idx + 1) * width + rank_idx * GRID_SPACING + QUERY_EXTRA_SPACING
                     grid_img[:, start:end, :] = gimg
                 else:
                     _cp_img_to(
