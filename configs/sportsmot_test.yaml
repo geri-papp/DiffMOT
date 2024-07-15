@@ -5,7 +5,7 @@ eval_mode: True
 # optimizer
 lr: 0.0001
 # train
-data_dir: '/home/geri/work/datasets/sportsmot_publish/dataset/trackers_gt_t/train'
+data_dir: 'datasets/sportsmot_publish/dataset/trackers_gt_t/train'
 diffnet: HMINet
 interval: 5
 augment: True

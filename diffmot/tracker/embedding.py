@@ -175,7 +175,7 @@ class EmbeddingComputer:
             path = "external/weights/dance_sbs_S50.pth"
             # path = "/home/estar/lwy/DiffMOT/external/weights/dancetrack_sbs_S50_hybtid.pth"
         elif self.dataset == "sports":
-            path = "/home/geri/work/OXIT-Sport_Framework/src/submodules/fast-reid/checkpoints/sports_sbs_S50.pth"
+            path = "src/submodules/fast-reid/checkpoints/sports_sbs_S50.pth"
         else:
             raise RuntimeError("Need the path for a new ReID model.")
 

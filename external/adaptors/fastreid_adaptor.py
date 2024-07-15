@@ -17,7 +17,7 @@ def setup_cfg(config_file, opts):
 class FastReID(torch.nn.Module):
     def __init__(self, weights_path):
         super().__init__()
-        config_file = "/home/geri/work/DiffMOT/external/fast_reid/configs/MOT17/sbs_S50.yml"
+        config_file = "src/submodules/fast-reid/configs/MOT17/sbs_S50.yml"
         self.cfg = setup_cfg(config_file, ["MODEL.WEIGHTS", weights_path])
         self.model = build_model(self.cfg)
         self.model.eval()
