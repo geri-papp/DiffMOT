@@ -2,7 +2,7 @@ import itertools
 import os
 import os.path as osp
 import time
-from collections import deque
+from collections import deque, Counter
 
 import cv2
 import numpy as np
@@ -22,8 +22,9 @@ from .gmc import GMC
 
 class STrack(BaseTrack):
     # shared_kalman = KalmanFilter()
-    def __init__(self, tlwh, score, temp_feat=None, buffer_size=30):
+    def __init__(self, tlwh, label, score, temp_feat=None, buffer_size=30):
 
+        self.buffer_size = buffer_size
         # wait activate
         self.xywh_omemory = deque([], maxlen=buffer_size)
         self.xywh_pmemory = deque([], maxlen=buffer_size)
@@ -36,6 +37,9 @@ class STrack(BaseTrack):
         self.mean, self.covariance = None, None
         self.is_activated = False
 
+        self._label = label
+        self.label_memory = deque()
+        self.label_counter = Counter()
         self.score = score
         self.tracklet_len = 0
 
@@ -110,6 +114,9 @@ class STrack(BaseTrack):
         self.xywh_pmemory.append(self.xywh.copy())
         self.xywh_amemory.append(self.xywh.copy())
 
+        self.label_memory.append(self._label)
+        self.label_counter[self._label] += 1
+
         delta_bbox = self.xywh.copy() - self.xywh.copy()
         tmp_conds = np.concatenate((self.xywh.copy(), delta_bbox))
         self.conds.append(tmp_conds)
@@ -160,8 +167,22 @@ class STrack(BaseTrack):
         self.is_activated = True
 
         self.score = new_track.score
+
+        new_label = new_track.label
+        self.label_memory.append(new_label)
+        self.label_counter[new_label] += 1
+        if len(self.label_memory) > self.buffer_size:
+            oldest_value = self.label_memory.popleft()
+            self.label_counter[oldest_value] -= 1
+            if self.label_counter[oldest_value] == 0:
+                del self.label_counter[oldest_value]
+
         if update_feature:
             self.update_features(new_track.curr_feat)
+
+    @property
+    def label(self):
+        return self.label_counter.most_common(1)[0][0] if len(self.label_counter) != 0 else self._label
 
     @property
     def tlwh(self):
@@ -247,7 +268,7 @@ class diffmottracker(object):
         self.embedder.dump_cache()
 
     def update(self, dets, model, frame_id, img_w, img_h, tag, img=None):
-        dets = dets.detach().cpu().numpy()
+        dets = dets.cpu().numpy()
         self.model = model
         self.frame_id += 1
         activated_starcks = []
@@ -256,9 +277,9 @@ class diffmottracker(object):
         removed_stracks = []
         # dets[:, 2] = dets[:, 0] + dets[:, 2]
         # dets[:, 3] = dets[:, 1] + dets[:, 3]
-        remain_inds = dets[:, 4] > self.det_thresh
-        inds_low = dets[:, 4] > self.config.low_thres
-        inds_high = dets[:, 4] < self.det_thresh
+        remain_inds = dets[:, 5] > self.det_thresh
+        inds_low = dets[:, 5] > self.config.low_thres
+        inds_high = dets[:, 5] < self.det_thresh
         inds_second = np.logical_and(inds_low, inds_high)
         dets_second = dets[inds_second]
         dets = dets[remain_inds]
@@ -266,7 +287,7 @@ class diffmottracker(object):
         dets_embs = np.ones((dets.shape[0], 1))
         if dets.shape[0] != 0:
             dets_embs = self.embedder.compute_embedding(img, dets[:, :4], tag)
-        trust = (dets[:, 4] - self.det_thresh) / (1 - self.det_thresh)
+        trust = (dets[:, 5] - self.det_thresh) / (1 - self.det_thresh)
         af = self.alpha_fixed_emb
         # From [self.alpha_fixed_emb, 1], goes to 1 as detector is less confident
         dets_alpha = af + (1 - af) * (1 - trust)
@@ -274,7 +295,7 @@ class diffmottracker(object):
         if len(dets) > 0:
             """Detections"""
             detections = [
-                STrack(STrack.tlbr_to_tlwh(tlbrs[:4]), tlbrs[4], f, 30) for (tlbrs, f) in zip(dets[:, :5], dets_embs)
+                STrack(STrack.tlbr_to_tlwh(tlbrs[:4]), int(tlbrs[4].item()), tlbrs[5], f, 30) for (tlbrs, f) in zip(dets, dets_embs)
             ]
         else:
             detections = []
